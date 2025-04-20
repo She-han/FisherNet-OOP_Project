@@ -24,3 +24,6 @@ hs_err_pid*
 replay_pid*
 /Application/nbproject/private/
 /Application/build/
+/TestApp/nbproject/private/
+/TestApplication/nbproject/private/
+/TestApplication/build/
