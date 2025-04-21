@@ -1,152 +1,184 @@
 package dashboard;
 
-// (Paste your full StatsPanel code here, see below for the improved, ready-to-use version)
-
-import db.DBHelper;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.CategoryAxis;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.labels.PieSectionLabelGenerator;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.PiePlot;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.general.DefaultPieDataset;
-import org.jfree.data.time.Day;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
+import org.knowm.xchart.*;
+import org.knowm.xchart.style.PieStyler;
+import org.knowm.xchart.style.Styler;
+import com.github.lgooddatepicker.components.DatePicker;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
+import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.text.AttributedString;
-import java.text.DecimalFormat;
 import java.time.LocalDate;
-import java.time.ZoneId;
+import java.util.*;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import db.DBHelper;
+import java.util.List;
+import java.util.ArrayList;
 
 public class StatsPanel extends JPanel {
     private LocalDate fromDate;
     private LocalDate toDate;
 
     // Chart panels for updating
-    private ChartPanel pieChartPanel;
-    private ChartPanel trendChartPanel;
-    private ChartPanel barChartPanel;
-    private ChartPanel boatChartPanel;
+    private JPanel pieChartPanel;
+    private JPanel trendChartPanel;
+    private JPanel barChartPanel;
+    private JPanel boatChartPanel;
 
-    private JSpinner fromDateSpinner;
-    private JSpinner toDateSpinner;
+    private DatePicker fromDatePicker;
+    private DatePicker toDatePicker;
+
+    // --- Keep border colors consistent
+    private static final Color PREFERED_CHART_BORDER_COLOR = new Color(70, 120, 220);
 
     public StatsPanel() {
         setLayout(new BorderLayout());
         setBackground(new Color(27, 34, 44));
 
-        try {
-            JPanel topPanel = new JPanel(new BorderLayout());
-            topPanel.setOpaque(false);
+        // Header
+        JLabel topic = new JLabel("Fishery Stock Statistics");
+        topic.setFont(new Font("Segoe UI Semibold", Font.BOLD, 32));
+        topic.setForeground(Color.WHITE);
+        topic.setBorder(new EmptyBorder(20, 30, 10, 0));
 
-            JLabel topic = new JLabel("Fishery Stock Statistics");
-            topic.setFont(new Font("Segoe UI", Font.BOLD, 32));
-            topic.setForeground(new Color(33, 99, 186));
-            topic.setBorder(new EmptyBorder(15, 20, 10, 0));
-            topPanel.add(topic, BorderLayout.WEST);
+        // Date filter panel
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 0));
+        filterPanel.setOpaque(false);
+        filterPanel.setBorder(new EmptyBorder(10, 0, 10, 30));
+        JLabel fromLabel = new JLabel("From:");
+        fromLabel.setForeground(new Color(140,180,255));
+        fromLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        fromDatePicker = new DatePicker();
+        JLabel toLabel = new JLabel("To:");
+        toLabel.setForeground(new Color(140,180,255));
+        toLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        toDatePicker = new DatePicker();
 
-            // Time filter controls
-            JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 2));
-            filterPanel.setOpaque(false);
-            filterPanel.setBorder(new EmptyBorder(0,0,0,30));
-            filterPanel.add(new JLabel("From:"));
-            fromDateSpinner = createDateSpinner(LocalDate.now().minusMonths(1));
-            filterPanel.add(fromDateSpinner);
-            filterPanel.add(new JLabel("To:"));
-            toDateSpinner = createDateSpinner(LocalDate.now());
-            filterPanel.add(toDateSpinner);
-            JButton updateBtn = new JButton("Update");
-            updateBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            updateBtn.setBackground(new Color(33,99,186));
-            updateBtn.setForeground(Color.WHITE);
-            updateBtn.setFocusPainted(false);
-            updateBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            filterPanel.add(updateBtn);
-            topPanel.add(filterPanel, BorderLayout.EAST);
+        JButton updateBtn = new JButton("Update");
+        updateBtn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        updateBtn.setBackground(new Color(33,99,186));
+        updateBtn.setForeground(Color.WHITE);
+        updateBtn.setFocusPainted(false);
+        updateBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        updateBtn.setPreferredSize(new Dimension(110, 34));
 
-            add(topPanel, BorderLayout.NORTH);
+        filterPanel.add(fromLabel);
+        filterPanel.add(fromDatePicker);
+        filterPanel.add(toLabel);
+        filterPanel.add(toDatePicker);
+        filterPanel.add(updateBtn);
 
-            // Charts area
-            JPanel chartsGrid = new JPanel();
-            chartsGrid.setLayout(new GridLayout(2,2,20,20));
-            chartsGrid.setOpaque(false);
-            chartsGrid.setBorder(new EmptyBorder(30, 20, 30, 20));
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setOpaque(false);
+        headerPanel.add(topic, BorderLayout.WEST);
+        headerPanel.add(filterPanel, BorderLayout.EAST);
 
-            // Initialize charts
-            fromDate = ((Date)fromDateSpinner.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-            toDate = ((Date)toDateSpinner.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        add(headerPanel, BorderLayout.NORTH);
 
-            pieChartPanel = createPieChartPanel(fromDate, toDate);
-            trendChartPanel = createTrendChartPanel(fromDate, toDate);
-            barChartPanel = createTopFishBarChartPanel(fromDate, toDate);
-            boatChartPanel = createBoatContributionChartPanel(fromDate, toDate);
+        // Charts grid
+        JPanel chartsGrid = new JPanel(new GridLayout(2,2,24,24));
+        chartsGrid.setBorder(new EmptyBorder(24, 28, 24, 28));
+        chartsGrid.setBackground(new Color(27, 34, 44));
 
-            chartsGrid.add(pieChartPanel);
-            chartsGrid.add(trendChartPanel);
-            chartsGrid.add(barChartPanel);
-            chartsGrid.add(boatChartPanel);
+        // Determine initial full date range
+        LocalDate[] minMax = getMinMaxDates();
+        LocalDate minDate = minMax[0];
+        LocalDate maxDate = minMax[1];
 
-            add(chartsGrid, BorderLayout.CENTER);
+        // Set date pickers initial values
+        fromDatePicker.setDate(minDate);
+        toDatePicker.setDate(maxDate);
 
-            // Update charts on time frame selection
-            updateBtn.addActionListener((ActionEvent e) -> {
-                fromDate = ((Date)fromDateSpinner.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                toDate = ((Date)toDateSpinner.getValue()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                refreshAllCharts();
-            });
-        } catch(Exception ex) {
-            ex.printStackTrace();
-            removeAll();
-            JLabel error = new JLabel("Failed to load statistics: " + ex.getMessage());
-            error.setForeground(Color.RED);
-            add(error, BorderLayout.CENTER);
-        }
+        fromDate = minDate;
+        toDate = maxDate;
+
+        // --- 1. Show all charts initially ---
+        pieChartPanel   = createModernChartPanel("Stock Distribution",   createPieChart(fromDate, toDate),   PREFERED_CHART_BORDER_COLOR);
+        trendChartPanel = createModernChartPanel("Stock Trend Over Time",createTrendChart(fromDate, toDate), PREFERED_CHART_BORDER_COLOR);
+        barChartPanel   = createModernChartPanel("Top Fish Types",       createTopFishBarChart(fromDate, toDate), PREFERED_CHART_BORDER_COLOR);
+        boatChartPanel  = createModernChartPanel("Boat-wise Stock Contribution", createBoatContributionChart(fromDate, toDate), PREFERED_CHART_BORDER_COLOR);
+
+        chartsGrid.add(pieChartPanel);
+        chartsGrid.add(trendChartPanel);
+        chartsGrid.add(barChartPanel);
+        chartsGrid.add(boatChartPanel);
+
+        add(chartsGrid, BorderLayout.CENTER);
+
+        // --- Make charts visible immediately ---
+        revalidate();
+        repaint();
+
+        // Update charts on filter
+        updateBtn.addActionListener((ActionEvent e) -> {
+            fromDate = fromDatePicker.getDate();
+            toDate = toDatePicker.getDate();
+            refreshAllCharts();
+        });
     }
 
-    private JSpinner createDateSpinner(LocalDate defaultVal) {
-        SpinnerDateModel model = new SpinnerDateModel(java.sql.Date.valueOf(defaultVal), null, null, java.util.Calendar.DAY_OF_MONTH);
-        JSpinner spinner = new JSpinner(model);
-        JSpinner.DateEditor editor = new JSpinner.DateEditor(spinner, "yyyy-MM-dd");
-        spinner.setEditor(editor);
-        spinner.setPreferredSize(new Dimension(120, 28));
-        spinner.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        spinner.setValue(java.sql.Date.valueOf(defaultVal));
-        return spinner;
+    private LocalDate[] getMinMaxDates() {
+        LocalDate min = LocalDate.now().minusYears(10);
+        LocalDate max = LocalDate.now();
+        try (Connection con = DBHelper.getConnection()) {
+            String sql = "SELECT MIN(date) AS min_date, MAX(date) AS max_date FROM fish_stocks";
+            PreparedStatement ps = con.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String minStr = rs.getString("min_date");
+                String maxStr = rs.getString("max_date");
+                if (minStr != null && !minStr.isEmpty()) min = LocalDate.parse(minStr);
+                if (maxStr != null && !maxStr.isEmpty()) max = LocalDate.parse(maxStr);
+            }
+        } catch (Exception e) {
+            // if error, fallback to last month to today
+            min = LocalDate.now().minusMonths(1);
+            max = LocalDate.now();
+        }
+        return new LocalDate[]{min, max};
     }
 
     private void refreshAllCharts() {
-        pieChartPanel.setChart(createPieChart(fromDate, toDate));
-        trendChartPanel.setChart(createTrendChart(fromDate, toDate));
-        barChartPanel.setChart(createTopFishBarChart(fromDate, toDate));
-        boatChartPanel.setChart(createBoatContributionChart(fromDate, toDate));
+        replaceChartPanel(pieChartPanel,   createPieChart(fromDate, toDate));
+        replaceChartPanel(trendChartPanel, createTrendChart(fromDate, toDate));
+        replaceChartPanel(barChartPanel,   createTopFishBarChart(fromDate, toDate));
+        replaceChartPanel(boatChartPanel,  createBoatContributionChart(fromDate, toDate));
+        revalidate();
+        repaint();
+    }
+
+    // Helper to replace chart in a panel
+    private void replaceChartPanel(JPanel parent, JComponent newChartPanel) {
+        parent.removeAll();
+        parent.add(newChartPanel, BorderLayout.CENTER);
+        parent.revalidate();
+        parent.repaint();
+    }
+
+    private JPanel createModernChartPanel(String title, JComponent chartPanel, Color borderColor) {
+        JLabel chartTitle = new JLabel(title, SwingConstants.CENTER);
+        chartTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        chartTitle.setForeground(Color.WHITE);
+
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setOpaque(false);
+        wrapper.setBorder(new CompoundBorder(
+                new LineBorder(borderColor, 2, true),
+                new EmptyBorder(12, 12, 12, 12)));
+        wrapper.add(chartTitle, BorderLayout.NORTH);
+        wrapper.add(chartPanel, BorderLayout.CENTER);
+        wrapper.setLayout(new BorderLayout());
+        return wrapper;
     }
 
     // ---- Pie Chart: Stock Distribution by Fish Type ----
-    private ChartPanel createPieChartPanel(LocalDate from, LocalDate to) {
-        ChartPanel panel = new ChartPanel(createPieChart(from, to));
-        panel.setOpaque(false);
-        panel.setBackground(new Color(0,0,0,0));
-        panel.setPreferredSize(new Dimension(400, 320));
-        panel.setMouseWheelEnabled(true);
-        return panel;
-    }
-    private JFreeChart createPieChart(LocalDate from, LocalDate to) {
-        DefaultPieDataset dataset = new DefaultPieDataset();
+    private JComponent createPieChart(LocalDate from, LocalDate to) {
+        Map<String, Double> data = new LinkedHashMap<>();
         try (Connection con = DBHelper.getConnection()) {
             String sql = "SELECT fish_type, SUM(fish_load_kg) as total_kg FROM fish_stocks WHERE date >= ? AND date <= ? GROUP BY fish_type";
             PreparedStatement ps = con.prepareStatement(sql);
@@ -157,109 +189,110 @@ public class StatsPanel extends JPanel {
             while (rs.next()) {
                 String fishType = rs.getString("fish_type");
                 double totalKg = rs.getDouble("total_kg");
-                dataset.setValue(fishType, totalKg);
+                data.put(fishType, totalKg);
                 hasData = true;
             }
-            if (!hasData) dataset.setValue("No Data", 1);
+            if (!hasData) data.put("No Data", 1.0);
         } catch (Exception e) {
-            dataset.setValue("Error", 1);
+            data.clear();
+            data.put("Error", 1.0);
         }
-        JFreeChart chart = ChartFactory.createPieChart(
-                "Stock Distribution", dataset, false, true, false);
-        chart.setBackgroundPaint(new Color(27, 34, 44));
-        PiePlot plot = (PiePlot) chart.getPlot();
-        plot.setBackgroundPaint(new Color(27, 34, 44));
-        plot.setOutlineVisible(false);
-        plot.setShadowPaint(null);
-        plot.setSectionOutlinesVisible(false);
-        Color[] sectionColors = {new Color(33, 99, 186),new Color(240, 220, 170),new Color(80, 200, 120),new Color(241, 91, 181),new Color(255, 99, 71),new Color(255, 195, 0),new Color(128, 128, 128)};
-        int colorIndex = 0;
-        for (Object key : dataset.getKeys()) {
-            plot.setSectionPaint((Comparable) key, sectionColors[colorIndex % sectionColors.length]);
-            colorIndex++;
+
+        PieChart chart = new PieChartBuilder()
+               .width(400)
+               .height(300)
+               .title("Stock Distribution by Fish Type")
+               .theme(Styler.ChartTheme.GGPlot2)
+               .build();
+
+        // Styling
+        chart.getStyler().setChartTitleBoxVisible(false);
+        chart.getStyler().setChartBackgroundColor(new Color(27, 34, 44));
+        chart.getStyler().setPlotBackgroundColor(new Color(34, 44, 60));
+        chart.getStyler().setLegendVisible(true); // Show legend for all types, including "crab"
+        chart.getStyler().setLegendFont(new Font("Segoe UI", Font.BOLD, 14));
+        chart.getStyler().setLegendBackgroundColor(new Color(27, 34, 44));
+        chart.getStyler().setLegendBorderColor(PREFERED_CHART_BORDER_COLOR);
+        chart.getStyler().setChartPadding(10);
+        chart.getStyler().setCircular(true);
+        chart.getStyler().setStartAngleInDegrees(90);
+        chart.getStyler().setChartTitleFont(new Font("Segoe UI", Font.BOLD, 20));
+        chart.getStyler().setChartFontColor(Color.WHITE);
+        chart.getStyler().setChartTitleBoxBorderColor(PREFERED_CHART_BORDER_COLOR);
+
+
+
+        // Assign colors for the slices
+        Color[] pieColors = new Color[]{
+                new Color(33, 99, 186),   // blue
+                new Color(140, 200, 140), // green
+                new Color(255, 210, 90),  // yellow
+                new Color(220, 80, 80),   // red
+                new Color(140, 180, 255), // light blue
+                new Color(255, 160, 180), // pink
+                new Color(120, 120, 120), // gray
+                new Color(180, 140, 255), // purple
+                new Color(100, 200, 220), // cyan
+                new Color(200, 200, 80)   // olive
+        };
+        chart.getStyler().setSeriesColors(pieColors);
+
+        for (Map.Entry<String, Double> entry : data.entrySet()) {
+            chart.addSeries(entry.getKey(), entry.getValue());
         }
-        plot.setLabelFont(new Font("Segoe UI", Font.BOLD, 17));
-        plot.setLabelPaint(Color.WHITE);
-        plot.setLabelShadowPaint(null);
-        plot.setLabelBackgroundPaint(null);
-        plot.setLabelOutlinePaint(null);
-        plot.setSimpleLabels(true);
-        plot.setLabelGap(0.012);
-        plot.setLabelGenerator(new PieSectionLabelGenerator() {
-            private final DecimalFormat percentFormat = new DecimalFormat("0.0");
-            @Override
-            public String generateSectionLabel(org.jfree.data.general.PieDataset dataset, Comparable key) {
-                Number value = dataset.getValue(key);
-                if (value == null || value.doubleValue() <= 0) return null;
-                double total = 0;
-                for (int i = 0; i < dataset.getItemCount(); i++)
-                    total += dataset.getValue(i).doubleValue();
-                double percent = value.doubleValue() / total * 100.0;
-                if (percent < 3.0) return null;
-                return key + " (" + percentFormat.format(percent) + "%)";
-            }
-            @Override
-            public AttributedString generateAttributedSectionLabel(org.jfree.data.general.PieDataset dataset, Comparable key) {
-                return null;
-            }
-        });
-        return chart;
+        return new XChartPanel<>(chart);
     }
 
     // ---- Line Chart: Stock Trend Over Time ----
-    private ChartPanel createTrendChartPanel(LocalDate from, LocalDate to) {
-        ChartPanel panel = new ChartPanel(createTrendChart(from, to));
-        panel.setOpaque(false);
-        panel.setBackground(new Color(0,0,0,0));
-        panel.setPreferredSize(new Dimension(400, 320));
-        panel.setMouseWheelEnabled(true);
-        return panel;
-    }
-    private JFreeChart createTrendChart(LocalDate from, LocalDate to) {
-        TimeSeries series = new TimeSeries("Total Stock");
+    private JComponent createTrendChart(LocalDate from, LocalDate to) {
+        List<Date> dateList = new ArrayList<>();
+        List<Double> valueList = new ArrayList<>();
         try (Connection con = DBHelper.getConnection()) {
             String sql = "SELECT date, SUM(fish_load_kg) as total_kg FROM fish_stocks WHERE date >= ? AND date <= ? GROUP BY date ORDER BY date ASC";
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, from.toString());
             ps.setString(2, to.toString());
             ResultSet rs = ps.executeQuery();
+            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
             while (rs.next()) {
-                LocalDate d = LocalDate.parse(rs.getString("date"));
+                String dateStr = rs.getString("date");
+                Date d = fmt.parse(dateStr); // convert String to java.util.Date
                 double v = rs.getDouble("total_kg");
-                series.add(new Day(Date.from(d.atStartOfDay(ZoneId.systemDefault()).toInstant())), v);
+                dateList.add(d);
+                valueList.add(v);
             }
-        } catch (Exception e) {}
-        TimeSeriesCollection dataset = new TimeSeriesCollection();
-        dataset.addSeries(series);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                "Stock Trend Over Time", "Date", "Total Stock (Kg)", dataset, false, true, false);
-        chart.setBackgroundPaint(new Color(27, 34, 44));
-        XYPlot plot = chart.getXYPlot();
-        plot.setBackgroundPaint(new Color(34, 44, 60));
-        plot.setDomainGridlinePaint(new Color(70, 90, 120, 80));
-        plot.setRangeGridlinePaint(new Color(70, 90, 120, 80));
-        plot.getRenderer().setSeriesPaint(0, new Color(33, 99, 186));
-        plot.getRenderer().setSeriesStroke(0, new BasicStroke(3.0f));
-        ValueAxis axis = plot.getDomainAxis();
-        axis.setLabelFont(new Font("Segoe UI", Font.BOLD, 15));
-        axis.setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 13));
-        plot.getRangeAxis().setLabelFont(new Font("Segoe UI", Font.BOLD, 15));
-        plot.getRangeAxis().setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 13));
-        return chart;
+        XYChart chart = new XYChartBuilder().width(400).height(300)
+                .title("Stock Trend Over Time")
+                .xAxisTitle("Date").yAxisTitle("Total Stock (Kg)")
+                .theme(Styler.ChartTheme.GGPlot2).build();
+        chart.getStyler().setChartBackgroundColor(new Color(27, 34, 44));
+        chart.getStyler().setPlotBackgroundColor(new Color(34, 44, 60));
+        chart.getStyler().setLegendVisible(false);
+        chart.getStyler().setPlotGridLinesColor(new Color(190, 200, 255, 60));
+        chart.getStyler().setAxisTickLabelsColor(Color.WHITE);
+        chart.getStyler().setAxisTitleFont(new Font("Segoe UI", Font.BOLD, 17));
+        chart.getStyler().setAxisTickLabelsFont(new Font("Segoe UI", Font.PLAIN, 15));
+        chart.getStyler().setSeriesColors(new Color[]{new Color(33, 99, 186)});
+        chart.getStyler().setChartTitleFont(new Font("Segoe UI", Font.BOLD, 20));
+        chart.getStyler().setChartFontColor(Color.WHITE);
+        chart.getStyler().setChartTitleBoxVisible(false);
+        chart.getStyler().setChartTitleBoxBorderColor(PREFERED_CHART_BORDER_COLOR);
+        chart.getStyler().setXAxisLabelRotation(20);
+
+        if (!dateList.isEmpty()) {
+            chart.addSeries("Total Stock", dateList, valueList);
+        }
+        return new XChartPanel<>(chart);
     }
 
     // ---- Bar Chart: Top Fish Types ----
-    private ChartPanel createTopFishBarChartPanel(LocalDate from, LocalDate to) {
-        ChartPanel panel = new ChartPanel(createTopFishBarChart(from, to));
-        panel.setOpaque(false);
-        panel.setBackground(new Color(0,0,0,0));
-        panel.setPreferredSize(new Dimension(400, 320));
-        panel.setMouseWheelEnabled(true);
-        return panel;
-    }
-    private JFreeChart createTopFishBarChart(LocalDate from, LocalDate to) {
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    private JComponent createTopFishBarChart(LocalDate from, LocalDate to) {
+        List<String> types = new ArrayList<>();
+        List<Double> values = new ArrayList<>();
         try (Connection con = DBHelper.getConnection()) {
             String sql = "SELECT fish_type, SUM(fish_load_kg) as total_kg FROM fish_stocks WHERE date >= ? AND date <= ? GROUP BY fish_type ORDER BY total_kg DESC";
             PreparedStatement ps = con.prepareStatement(sql);
@@ -267,41 +300,37 @@ public class StatsPanel extends JPanel {
             ps.setString(2, to.toString());
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                String fishType = rs.getString("fish_type");
-                double totalKg = rs.getDouble("total_kg");
-                dataset.addValue(totalKg, "Fish Load (Kg)", fishType);
+                types.add(rs.getString("fish_type"));
+                values.add(rs.getDouble("total_kg"));
             }
         } catch (Exception e) {}
-        JFreeChart chart = ChartFactory.createBarChart(
-                "Top Fish Types", "Fish Type", "Total Stock (Kg)", dataset, PlotOrientation.VERTICAL, false, true, false);
-        chart.setBackgroundPaint(new Color(27, 34, 44));
-        CategoryPlot plot = chart.getCategoryPlot();
-        plot.setBackgroundPaint(new Color(34, 44, 60));
-        plot.setDomainGridlinePaint(new Color(70, 90, 120, 80));
-        plot.setRangeGridlinePaint(new Color(70, 90, 120, 80));
-        plot.getRenderer().setSeriesPaint(0, new Color(33, 99, 186));
-        plot.getRenderer().setBaseItemLabelFont(new Font("Segoe UI", Font.BOLD, 14));
-        plot.getRenderer().setBaseItemLabelsVisible(true);
-        CategoryAxis domainAxis = plot.getDomainAxis();
-        domainAxis.setLabelFont(new Font("Segoe UI", Font.BOLD, 15));
-        domainAxis.setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 13));
-        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-        rangeAxis.setLabelFont(new Font("Segoe UI", Font.BOLD, 15));
-        rangeAxis.setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 13));
-        return chart;
+        CategoryChart chart = new CategoryChartBuilder().width(400).height(300)
+                .title("Top Fish Types")
+                .xAxisTitle("Fish Type").yAxisTitle("Total Stock (Kg)")
+                .theme(Styler.ChartTheme.GGPlot2).build();
+        chart.getStyler().setChartFontColor(Color.WHITE);
+        chart.getStyler().setChartBackgroundColor(new Color(27, 34, 44));
+        chart.getStyler().setPlotBackgroundColor(new Color(34, 44, 60));
+        chart.getStyler().setLegendVisible(false);
+        chart.getStyler().setPlotGridLinesColor(new Color(190, 200, 255, 60));
+        chart.getStyler().setAxisTickLabelsColor(Color.WHITE);
+        chart.getStyler().setAxisTitleFont(new Font("Segoe UI", Font.BOLD, 17));
+        chart.getStyler().setAxisTickLabelsFont(new Font("Segoe UI", Font.PLAIN, 15));
+        chart.getStyler().setSeriesColors(new Color[]{new Color(130, 180, 255)});
+        chart.getStyler().setChartTitleFont(new Font("Segoe UI", Font.BOLD, 20));
+        chart.getStyler().setChartTitleBoxVisible(false);
+        chart.getStyler().setChartTitleBoxBorderColor(PREFERED_CHART_BORDER_COLOR);
+
+        if (!types.isEmpty()) {
+            chart.addSeries("Fish Load (Kg)", types, values);
+        }
+        return new XChartPanel<>(chart);
     }
 
     // ---- Bar Chart: Boat-wise Stock Contribution ----
-    private ChartPanel createBoatContributionChartPanel(LocalDate from, LocalDate to) {
-        ChartPanel panel = new ChartPanel(createBoatContributionChart(from, to));
-        panel.setOpaque(false);
-        panel.setBackground(new Color(0,0,0,0));
-        panel.setPreferredSize(new Dimension(400, 320));
-        panel.setMouseWheelEnabled(true);
-        return panel;
-    }
-    private JFreeChart createBoatContributionChart(LocalDate from, LocalDate to) {
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    private JComponent createBoatContributionChart(LocalDate from, LocalDate to) {
+        List<String> boats = new ArrayList<>();
+        List<Double> values = new ArrayList<>();
         try (Connection con = DBHelper.getConnection()) {
             String sql = "SELECT b.name AS boat_name, SUM(s.fish_load_kg) AS total_kg FROM fish_stocks s JOIN boats b ON s.boat_id = b.id WHERE s.date >= ? AND s.date <= ? GROUP BY b.name ORDER BY total_kg DESC";
             PreparedStatement ps = con.prepareStatement(sql);
@@ -309,27 +338,30 @@ public class StatsPanel extends JPanel {
             ps.setString(2, to.toString());
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                String boatName = rs.getString("boat_name");
-                double totalKg = rs.getDouble("total_kg");
-                dataset.addValue(totalKg, "Fish Load (Kg)", boatName);
+                boats.add(rs.getString("boat_name"));
+                values.add(rs.getDouble("total_kg"));
             }
         } catch (Exception e) {}
-        JFreeChart chart = ChartFactory.createBarChart(
-                "Boat-wise Stock Contribution", "Boat", "Total Stock (Kg)", dataset, PlotOrientation.VERTICAL, false, true, false);
-        chart.setBackgroundPaint(new Color(27, 34, 44));
-        CategoryPlot plot = chart.getCategoryPlot();
-        plot.setBackgroundPaint(new Color(34, 44, 60));
-        plot.setDomainGridlinePaint(new Color(70, 90, 120, 80));
-        plot.setRangeGridlinePaint(new Color(70, 90, 120, 80));
-        plot.getRenderer().setSeriesPaint(0, new Color(80, 200, 120));
-        plot.getRenderer().setBaseItemLabelFont(new Font("Segoe UI", Font.BOLD, 14));
-        plot.getRenderer().setBaseItemLabelsVisible(true);
-        CategoryAxis domainAxis = plot.getDomainAxis();
-        domainAxis.setLabelFont(new Font("Segoe UI", Font.BOLD, 15));
-        domainAxis.setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 13));
-        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-        rangeAxis.setLabelFont(new Font("Segoe UI", Font.BOLD, 15));
-        rangeAxis.setTickLabelFont(new Font("Segoe UI", Font.PLAIN, 13));
-        return chart;
+        CategoryChart chart = new CategoryChartBuilder().width(400).height(300)
+                .title("Boat-wise Stock Contribution")
+                .xAxisTitle("Boat").yAxisTitle("Total Stock (Kg)")
+                .theme(Styler.ChartTheme.GGPlot2).build();
+        chart.getStyler().setChartFontColor(Color.WHITE);
+        chart.getStyler().setChartBackgroundColor(new Color(27, 34, 44));
+        chart.getStyler().setPlotBackgroundColor(new Color(34, 44, 60));
+        chart.getStyler().setLegendVisible(false);
+        chart.getStyler().setPlotGridLinesColor(new Color(190, 200, 255, 60));
+        chart.getStyler().setAxisTickLabelsColor(Color.WHITE);
+        chart.getStyler().setAxisTitleFont(new Font("Segoe UI", Font.BOLD, 17));
+        chart.getStyler().setAxisTickLabelsFont(new Font("Segoe UI", Font.PLAIN, 15));
+        chart.getStyler().setSeriesColors(new Color[]{new Color(130, 180, 255)});
+        chart.getStyler().setChartTitleFont(new Font("Segoe UI", Font.BOLD, 20));
+        chart.getStyler().setChartTitleBoxVisible(false);
+        chart.getStyler().setChartTitleBoxBorderColor(PREFERED_CHART_BORDER_COLOR);
+
+        if (!boats.isEmpty()) {
+            chart.addSeries("Fish Load (Kg)", boats, values);
+        }
+        return new XChartPanel<>(chart);
     }
 }

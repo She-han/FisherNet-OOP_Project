@@ -12,13 +12,14 @@ import java.util.ArrayList;
 public class BoatDetailsPanel extends JPanel {
     private JPanel listPanel;
     private JTextField searchField;
+    private JButton addBoatBtn;
 
     public BoatDetailsPanel() {
         setLayout(new BorderLayout());
         setBackground(new Color(30, 36, 48));
         setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
-        // Top panel with title (left) and search (right)
+        // Top panel with title (left) and search + add (right)
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setOpaque(false);
         JLabel title = new JLabel("Boat Details");
@@ -56,8 +57,28 @@ public class BoatDetailsPanel extends JPanel {
         });
         searchBtn.addActionListener(e -> loadBoats());
 
+        // --- Add New Boat Button ---
+        addBoatBtn = new JButton("Add New Boat");
+        addBoatBtn.setBackground(new Color(70, 120, 220));
+        addBoatBtn.setForeground(Color.WHITE);
+        addBoatBtn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        addBoatBtn.setFocusPainted(false);
+        addBoatBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        addBoatBtn.setBorder(BorderFactory.createEmptyBorder(7, 18, 7, 18));
+        addBoatBtn.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                addBoatBtn.setBackground(new Color(50, 100, 180));
+            }
+            public void mouseExited(MouseEvent e) {
+                addBoatBtn.setBackground(new Color(70, 120, 220));
+            }
+        });
+        addBoatBtn.addActionListener(e -> showAddBoatDialog());
+
         searchPanel.add(searchField);
         searchPanel.add(searchBtn);
+        searchPanel.add(addBoatBtn); // Add new boat button next to search
+
         topPanel.add(searchPanel, BorderLayout.EAST);
 
         add(topPanel, BorderLayout.NORTH);
@@ -74,6 +95,22 @@ public class BoatDetailsPanel extends JPanel {
         add(scroll, BorderLayout.CENTER);
 
         loadBoats();
+    }
+
+    private void showAddBoatDialog() {
+        AddBoatPanel addBoatPanel = new AddBoatPanel();
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                addBoatPanel,
+                "Add New Boat",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+        // If the user clicks OK, reload boats (AddBoatPanel does insertion on Register)
+        if (result == JOptionPane.OK_OPTION) {
+            // Optionally, check if the boat was actually registered
+            loadBoats();
+        }
     }
 
     private void loadBoats() {

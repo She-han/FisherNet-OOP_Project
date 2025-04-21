@@ -31,7 +31,7 @@ public class StockManagementPanel extends JPanel {
 
         JLabel title = new JLabel("Fish Stock Management");
         title.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        title.setForeground(new Color(33,99,186));
+        title.setForeground(new Color(255,255,255));
         title.setBorder(new EmptyBorder(0, 0, 20, 0));
         topPanel.add(title, BorderLayout.WEST);
 

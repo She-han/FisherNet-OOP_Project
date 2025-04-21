@@ -2,6 +2,9 @@ package dashboard;
 
 import javax.swing.*;
 import java.awt.*;
+import com.formdev.flatlaf.FlatDarkLaf;
+// Remove FlatLafExtras import
+// import com.formdev.flatlaf.extras.FlatLafExtras;
 
 public class MainFrame extends JFrame {
     private Admin admin;
@@ -36,8 +39,11 @@ public class MainFrame extends JFrame {
                     contentPanel.add(new StockManagementPanel(), BorderLayout.CENTER);
                     break;
                 case "stats":
-                    contentPanel.add(new StatsPanel(), BorderLayout.CENTER);
+                    contentPanel.add(new StatsPanel(), BorderLayout.CENTER); // StatsPanel now uses XChart
                     break;
+                case "reports":
+                    contentPanel.add(new ReportsPanel(), BorderLayout.CENTER); // StatsPanel now uses XChart
+                break;
                 case "logout":
                     // Dispose MainFrame and show HomePageFrame for login/signup
                     SwingUtilities.invokeLater(() -> {
@@ -61,11 +67,11 @@ public class MainFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatDarkLaf());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // Set FlatLaf look and feel
+        FlatDarkLaf.setup();
+        // No FlatLafExtras.installJFreeChartTheme(); needed for XChart
+
+        // NOW start Swing app
         SwingUtilities.invokeLater(() -> new MainFrame());
     }
 }
