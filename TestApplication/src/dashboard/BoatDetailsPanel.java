@@ -13,8 +13,9 @@ public class BoatDetailsPanel extends JPanel {
     private JPanel listPanel;
     private JTextField searchField;
     private JButton addBoatBtn;
+   private Admin admin;
 
-    public BoatDetailsPanel() {
+    public BoatDetailsPanel(Admin admin) {
         setLayout(new BorderLayout());
         setBackground(new Color(30, 36, 48));
         setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
@@ -98,7 +99,7 @@ public class BoatDetailsPanel extends JPanel {
     }
 
     private void showAddBoatDialog() {
-        AddBoatPanel addBoatPanel = new AddBoatPanel();
+        AddBoatPanel addBoatPanel = new AddBoatPanel(admin.lastName);
         int result = JOptionPane.showConfirmDialog(
                 this,
                 addBoatPanel,

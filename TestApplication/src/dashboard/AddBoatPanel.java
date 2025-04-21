@@ -12,8 +12,13 @@ import java.sql.*;
 
 public class AddBoatPanel extends JPanel {
     private PlaceholderTextField2 nameField, regNoField, ownerField, contactField, capacityField;
+    private JCheckBox gpsCheckBox;
+    private String adminName; // Name of logged-in admin
 
-    public AddBoatPanel() {
+    // Pass adminName directly to the constructor
+    public AddBoatPanel(String adminName) {
+        this.adminName = adminName;
+
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(new Color(30, 36, 48));
         setBorder(BorderFactory.createEmptyBorder(32, 48, 32, 48));
@@ -30,6 +35,16 @@ public class AddBoatPanel extends JPanel {
         capacityField   = createField("Capacity");
         ownerField  = createField("Owner Name");
         contactField= createField("Contact No");
+
+        // GPS Enabled checkbox
+        gpsCheckBox = new JCheckBox("GPS Enabled");
+        gpsCheckBox.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        gpsCheckBox.setForeground(new Color(140,180,255));
+        gpsCheckBox.setBackground(getBackground());
+        gpsCheckBox.setFocusPainted(false);
+        gpsCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        add(gpsCheckBox);
+        add(Box.createVerticalStrut(20));
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 8));
         btnPanel.setBackground(getBackground());
@@ -92,6 +107,7 @@ public class AddBoatPanel extends JPanel {
         ownerField.setText("");
         contactField.setText("");
         capacityField.setText("");
+        gpsCheckBox.setSelected(false);
     }
 
     private void registerBoat() {
@@ -100,6 +116,7 @@ public class AddBoatPanel extends JPanel {
         String owner = ownerField.getText().trim();
         String contact = contactField.getText().trim();
         String capacity = capacityField.getText().trim();
+        String gpsStatus = gpsCheckBox.isSelected() ? "GPS enabled" : "GPS not enabled";
 
         if (name.isEmpty() || regNo.isEmpty() || owner.isEmpty() || contact.isEmpty() || capacity.isEmpty()) {
             AnimatedMessage.showMessage(this, "Fill all fields!", "Warning", AnimatedMessage.Type.WARNING);
@@ -107,13 +124,15 @@ public class AddBoatPanel extends JPanel {
         }
 
         try (Connection con = DBHelper.getConnection()) {
-            String sql = "INSERT INTO boats (name, registration_number, owner_name, contact_no, capacity_Kg) VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO boats (name, registration_number, owner_name, contact_no, capacity_Kg, gps_status, created_at, registered_by) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)";
             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, name);
             ps.setString(2, regNo);
             ps.setString(3, owner);
             ps.setString(4, contact);
             ps.setString(5, capacity);
+            ps.setString(6, gpsStatus);
+            ps.setString(7, adminName);
 
             ps.executeUpdate();
             ResultSet rs = ps.getGeneratedKeys();

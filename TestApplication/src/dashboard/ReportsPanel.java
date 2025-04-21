@@ -6,18 +6,29 @@ import com.github.lgooddatepicker.components.DatePicker;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.Font;
 import java.awt.event.*;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.Vector;
+import java.io.FileOutputStream;
+import java.io.File;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+// OpenPDF imports
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.*;
 
 public class ReportsPanel extends JPanel {
     private JComboBox<String> reportSelect;
     private DatePicker fromDatePicker, toDatePicker;
     private JButton generateBtn;
+    private JButton downloadBtn;
     private JPanel contentPanel;
     private JTable reportTable;
     private JScrollPane scrollPane;
+    private String[] currentColumns = null;
+    private Vector<Vector<Object>> currentData = null;
 
     private static final String[] REPORTS = {
             "New Boat Added Report",
@@ -83,6 +94,24 @@ public class ReportsPanel extends JPanel {
         contentPanel.setOpaque(false);
         add(contentPanel, BorderLayout.CENTER);
 
+        // --- Download Button (bottom right) ---
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setOpaque(false);
+        downloadBtn = new JButton("Download PDF");
+        downloadBtn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        downloadBtn.setBackground(new Color(33, 99, 186));
+        downloadBtn.setForeground(Color.WHITE);
+        downloadBtn.setFocusPainted(false);
+        downloadBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        downloadBtn.setPreferredSize(new Dimension(140, 34));
+        downloadBtn.setEnabled(false);
+        downloadBtn.addActionListener(e -> downloadReportAsPDF());
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        btnPanel.setOpaque(false);
+        btnPanel.add(downloadBtn);
+        bottomPanel.add(btnPanel, BorderLayout.EAST);
+        add(bottomPanel, BorderLayout.SOUTH);
+
         // Action
         generateBtn.addActionListener(e -> generateReport());
 
@@ -109,7 +138,7 @@ public class ReportsPanel extends JPanel {
         try {
             switch (reportType) {
                 case 0:
-                    showTable(getNewBoatReport(from, to), new String[]{"Boat ID", "Name", "Registration No", "Owner", "Contact", "Capacity", "Added Date"});
+                    showTable(getNewBoatReport(from, to), new String[]{"Boat ID", "Name", "Registration No", "Owner", "Contact", "Capacity", "Added Date", "Added by"});
                     break;
                 case 1:
                     showTable(getNewStockUpdateReport(from, to), new String[]{"Stock ID", "Fish Type", "Boat", "Load (Kg)", "Date", "Added By"});
@@ -133,7 +162,7 @@ public class ReportsPanel extends JPanel {
     private Vector<Vector<Object>> getNewBoatReport(LocalDate from, LocalDate to) throws Exception {
         Vector<Vector<Object>> data = new Vector<>();
         try (Connection con = DBHelper.getConnection()) {
-            String sql = "SELECT id, name, registration_number, owner_name, contact_no, capacity_Kg, created_at " +
+            String sql = "SELECT id, name, registration_number, owner_name, contact_no, capacity_Kg, created_at, registered_by " +
                          "FROM boats WHERE created_at >= ? AND created_at <= ? ORDER BY created_at DESC";
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, from.toString());
@@ -147,7 +176,8 @@ public class ReportsPanel extends JPanel {
                 row.add(rs.getString("owner_name"));
                 row.add(rs.getString("contact_no"));
                 row.add(rs.getString("capacity_Kg"));
-              //  row.add(rs.getString("created_at"));
+                row.add(rs.getString("created_at"));
+                row.add(rs.getString("registered_by"));
                 data.add(row);
             }
         }
@@ -182,7 +212,6 @@ public class ReportsPanel extends JPanel {
 
     // --- REPORT 3: Stocks Gain By Particular Boat Report ---
     private void showStocksGainByBoatReport(LocalDate from, LocalDate to) {
-        // Ask for boat selection
         String boatName = selectBoatDialog();
         if (boatName == null) return;
 
@@ -297,8 +326,8 @@ public class ReportsPanel extends JPanel {
         reportTable = new JTable(data, colNames) {
             public boolean isCellEditable(int row, int col) { return false; }
         };
-        reportTable.setFont(new Font("Segoe UI", Font.PLAIN, 15));
-        reportTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 15));
+      //  reportTable.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+      //  reportTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 15));
         reportTable.setBackground(new Color(44, 44, 52));
         reportTable.setForeground(Color.WHITE);
         reportTable.setRowHeight(28);
@@ -311,6 +340,72 @@ public class ReportsPanel extends JPanel {
         contentPanel.add(scrollPane, BorderLayout.CENTER);
         contentPanel.revalidate();
         contentPanel.repaint();
+        // Save current data for download
+        currentColumns = columns;
+        currentData = data;
+        downloadBtn.setEnabled(currentData != null && currentData.size() > 0);
+    }
+
+    // --- DOWNLOAD PDF ---
+    private void downloadReportAsPDF() {
+        if (currentData == null || currentColumns == null || currentData.size() == 0) {
+            showMessage("No report data to export.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save Report as PDF");
+        fileChooser.setSelectedFile(new File("report.pdf"));
+        fileChooser.setFileFilter(new FileNameExtensionFilter("PDF Files", "pdf"));
+        int userSelection = fileChooser.showSaveDialog(this);
+        if (userSelection != JFileChooser.APPROVE_OPTION) return;
+
+        File file = fileChooser.getSelectedFile();
+        if (!file.getName().toLowerCase().endsWith(".pdf")) {
+            file = new File(file.getParent(), file.getName() + ".pdf");
+        }
+        try {
+            Document document = new Document(PageSize.A4.rotate());
+            PdfWriter.getInstance(document, new FileOutputStream(file));
+            document.open();
+
+            // Just use default font and color (no font/fontcolor changes)
+            // Title
+            String reportTitle = (String) reportSelect.getSelectedItem();
+            Paragraph title = new Paragraph(reportTitle + " (" + fromDatePicker.getDate() + " to " + toDatePicker.getDate() + ")\n\n");
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+
+            // Table
+            PdfPTable table = new PdfPTable(currentColumns.length);
+            table.setWidthPercentage(100);
+
+            for (String col : currentColumns) {
+                PdfPCell hcell = new PdfPCell(new Phrase(col));
+                hcell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                hcell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                hcell.setPadding(6);
+                hcell.setBorderWidth(1f);
+                table.addCell(hcell);
+            }
+
+            for (Vector<Object> row : currentData) {
+                for (Object value : row) {
+                    PdfPCell cell = new PdfPCell(new Phrase(value == null ? "" : value.toString()));
+                    cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                    cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                    cell.setPadding(5);
+                    cell.setBorderWidth(0.8f);
+                    table.addCell(cell);
+                }
+            }
+
+            document.add(table);
+            document.close();
+
+            showMessage("PDF exported successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            showMessage("Failed to export PDF: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     // --- MESSAGE UTILS ---

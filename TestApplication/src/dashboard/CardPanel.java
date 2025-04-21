@@ -13,8 +13,8 @@ public class CardPanel extends JPanel {
     public CardPanel(String title, String iconText, String description) {
         setLayout(new BorderLayout());
         setBackground(normalBg);
-        setBorder(BorderFactory.createLineBorder(normalBorder, 2, true));
-        setPreferredSize(new Dimension(240, 110));
+        setBorder(BorderFactory.createEmptyBorder(40, 10, 40, 10));
+        setPreferredSize(new Dimension(240, 200));
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         JLabel iconLabel = new JLabel(iconText, SwingConstants.CENTER);
@@ -43,13 +43,13 @@ public class CardPanel extends JPanel {
             @Override
             public void mouseEntered(MouseEvent e) {
                 setBackground(hoverBg);
-                setBorder(BorderFactory.createLineBorder(hoverBorder, 2, true));
+                 setBorder(BorderFactory.createEmptyBorder(40, 10, 40, 10));
                 repaint();
             }
             @Override
             public void mouseExited(MouseEvent e) {
                 setBackground(normalBg);
-                setBorder(BorderFactory.createLineBorder(normalBorder, 2, true));
+                setBorder(BorderFactory.createEmptyBorder(40, 10, 40, 10));
                 repaint();
             }
         });

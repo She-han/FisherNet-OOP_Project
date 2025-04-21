@@ -22,7 +22,7 @@ public class MainFrame extends JFrame {
         SidebarPanel sidebar = new SidebarPanel(admin);
         add(sidebar, BorderLayout.WEST);
 
-        contentPanel = new ContentPanel(); // default panel
+        contentPanel = new ContentPanel(admin); // default panel
         add(contentPanel, BorderLayout.CENTER);
 
         // --- Navigation Listener setup ---
@@ -30,10 +30,10 @@ public class MainFrame extends JFrame {
             contentPanel.removeAll();
             switch (viewName) {
                 case "dashboard":
-                    contentPanel.add(new ContentPanel(), BorderLayout.CENTER);
+                    contentPanel.add(new ContentPanel(admin), BorderLayout.CENTER);
                     break;
                 case "boats":
-                    contentPanel.add(new BoatDetailsPanel(), BorderLayout.CENTER);
+                    contentPanel.add(new BoatDetailsPanel(admin), BorderLayout.CENTER);
                     break;
                 case "stock":
                     contentPanel.add(new StockManagementPanel(), BorderLayout.CENTER);
@@ -52,7 +52,7 @@ public class MainFrame extends JFrame {
                     });
                     return; // Don't update contentPanel after logout
                 default:
-                    contentPanel.add(new ContentPanel(), BorderLayout.CENTER);
+                    contentPanel.add(new ContentPanel(admin), BorderLayout.CENTER);
             }
             contentPanel.revalidate();
             contentPanel.repaint();

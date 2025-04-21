@@ -6,7 +6,9 @@ import java.awt.*;
 public class ContentPanel extends JPanel {
     private JPanel mainPanel; // For swapping content
 
-    public ContentPanel() {
+        private Admin admin;
+
+    public ContentPanel(Admin admin) {
         setLayout(new BorderLayout());
         setBackground(new Color(30, 36, 48));
 
@@ -27,7 +29,7 @@ public class ContentPanel extends JPanel {
         JFrame parent = (JFrame) SwingUtilities.getWindowAncestor(ContentPanel.this);
         JDialog dialog = new JDialog(parent, "Register New Boat", true); // true = modal
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        dialog.setContentPane(new AddBoatPanel());
+        dialog.setContentPane(new AddBoatPanel(admin.lastName));
         dialog.pack();
         dialog.setLocationRelativeTo(parent); // Center on parent
         dialog.setVisible(true);
@@ -68,7 +70,7 @@ public class ContentPanel extends JPanel {
     private void showAddBoatPanel() {
         mainPanel.removeAll();
 
-        AddBoatPanel addBoatPanel = new AddBoatPanel();
+        AddBoatPanel addBoatPanel = new AddBoatPanel(admin.lastName);
 
         // Optionally, provide a "Back" button to return to dashboard stats
         JButton backBtn = new JButton("← Back");
