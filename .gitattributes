@@ -1,0 +1,2 @@
+# Force GitHub Linguist to recognize the repository as Java
+* linguist-language=Java
