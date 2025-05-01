@@ -51,7 +51,7 @@ class PlaceholderPasswordField extends JPasswordField {
 
 // ---- Main Frame ----
 public class HomePageFrame extends JFrame {
-    private CardLayout rightCardLayout;
+    private CardLayout rightCardLayout;    
     private JPanel rightPanel;
     private FisherNetLogoPanel logoPanel;
 

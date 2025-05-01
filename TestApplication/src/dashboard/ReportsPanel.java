@@ -31,11 +31,11 @@ public class ReportsPanel extends JPanel {
     private Vector<Vector<Object>> currentData = null;
 
     private static final String[] REPORTS = {
-            "New Boat Added Report",
-            "New Stock Update Report",
-            "Stocks Gain By Particular Boat Report",
+            "New Boats Added Report",
+            "New Stocks Updates Report",
+           /* "Stocks Gain By Particular Boat Report",
             "New Admin Signup Report",
-            "All Admin Changes Report"
+            "All Admin Changes Report"*/
     };
 
     public ReportsPanel() {
@@ -138,10 +138,10 @@ public class ReportsPanel extends JPanel {
         try {
             switch (reportType) {
                 case 0:
-                    showTable(getNewBoatReport(from, to), new String[]{"Boat ID", "Name", "Registration No", "Owner", "Contact", "Capacity", "Added Date", "Added by"});
+                    showTable(getNewBoatReport(from, to), new String[]{"Boat ID", "Name", "Registration No", "Owner", "Contact", "Capacity","GPS Status", "Added Date", "Added by"});
                     break;
                 case 1:
-                    showTable(getNewStockUpdateReport(from, to), new String[]{"Stock ID", "Fish Type", "Boat", "Load (Kg)", "Date", "Added By"});
+                    showTable(getNewStockUpdateReport(from, to), new String[]{"Date","Boat ID","Boat Name", "Fish Type", "Load (Kg)", "Upadate At", "Update By"});
                     break;
                 case 2:
                     showStocksGainByBoatReport(from, to);
@@ -162,7 +162,7 @@ public class ReportsPanel extends JPanel {
     private Vector<Vector<Object>> getNewBoatReport(LocalDate from, LocalDate to) throws Exception {
         Vector<Vector<Object>> data = new Vector<>();
         try (Connection con = DBHelper.getConnection()) {
-            String sql = "SELECT id, name, registration_number, owner_name, contact_no, capacity_Kg, created_at, registered_by " +
+            String sql = "SELECT id, name, registration_number, owner_name, contact_no, capacity_Kg, created_at,gps_status, registered_by " +
                          "FROM boats WHERE created_at >= ? AND created_at <= ? ORDER BY created_at DESC";
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, from.toString());
@@ -176,6 +176,7 @@ public class ReportsPanel extends JPanel {
                 row.add(rs.getString("owner_name"));
                 row.add(rs.getString("contact_no"));
                 row.add(rs.getString("capacity_Kg"));
+                row.add(rs.getString("gps_status"));
                 row.add(rs.getString("created_at"));
                 row.add(rs.getString("registered_by"));
                 data.add(row);
@@ -185,30 +186,32 @@ public class ReportsPanel extends JPanel {
     }
 
     // --- REPORT 2: New Stock Update Report ---
-    private Vector<Vector<Object>> getNewStockUpdateReport(LocalDate from, LocalDate to) throws Exception {
-        Vector<Vector<Object>> data = new Vector<>();
-        try (Connection con = DBHelper.getConnection()) {
-            String sql = "SELECT s.id, s.fish_type, b.name AS boat, s.fish_load_kg, s.date, a.username AS added_by " +
-                         "FROM fish_stocks s LEFT JOIN boats b ON s.boat_id=b.id " +
-                         "LEFT JOIN admins a ON s.added_by=a.id " +
-                         "WHERE s.date >= ? AND s.date <= ? ORDER BY s.date DESC";
-            PreparedStatement ps = con.prepareStatement(sql);
-            ps.setString(1, from.toString());
-            ps.setString(2, to.toString());
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Vector<Object> row = new Vector<>();
-                row.add(rs.getInt("id"));
-                row.add(rs.getString("fish_type"));
-                row.add(rs.getString("boat"));
-                row.add(rs.getString("fish_load_kg"));
-                row.add(rs.getString("date"));
-                row.add(rs.getString("added_by"));
-                data.add(row);
-            }
+private Vector<Vector<Object>> getNewStockUpdateReport(LocalDate from, LocalDate to) throws Exception {
+    Vector<Vector<Object>> data = new Vector<>();
+    try (Connection con = DBHelper.getConnection()) {
+        String sql = 
+            "SELECT s.boat_id, b.name AS boat_name, s.date, s.fish_type, s.fish_load_kg, s.updated_at, s.updated_by " +
+            "FROM fish_stocks s JOIN boats b ON s.boat_id = b.id " +
+            "WHERE s.updated_at >= ? AND s.updated_at <= ? " +
+            "ORDER BY s.updated_at DESC";
+        PreparedStatement ps = con.prepareStatement(sql);
+        ps.setString(1, from.toString());
+        ps.setString(2, to.toString());
+        ResultSet rs = ps.executeQuery();
+        while (rs.next()) {
+            Vector<Object> row = new Vector<>();
+            row.add(rs.getString("date"));
+            row.add(rs.getInt("boat_id")); // <-- fixed here
+            row.add(rs.getString("boat_name"));
+            row.add(rs.getString("fish_type"));               
+            row.add(rs.getString("fish_load_kg"));
+            row.add(rs.getString("updated_at"));
+            row.add(rs.getString("updated_by"));
+            data.add(row);
         }
-        return data;
     }
+    return data;
+}
 
     // --- REPORT 3: Stocks Gain By Particular Boat Report ---
     private void showStocksGainByBoatReport(LocalDate from, LocalDate to) {

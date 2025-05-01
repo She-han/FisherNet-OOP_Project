@@ -19,8 +19,10 @@ public class StockManagementPanel extends JPanel {
     private DatePicker searchDatePicker;
     private JComboBox<String> fishTypeCombo;
     private static final String[] FISH_TYPES = {"Tuna", "Salmon", "Prawns", "Crab", "Lobster", "Other"};
+     private String adminName;
 
-    public StockManagementPanel() {
+    public StockManagementPanel(String adminName) {
+        this.adminName = adminName;
         setLayout(new BorderLayout());
         setBackground(new Color(30, 36, 48));
         setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
@@ -358,12 +360,14 @@ public class StockManagementPanel extends JPanel {
                     return;
                 }
                 try (Connection con = DBHelper.getConnection()) {
-                    String sql = "INSERT INTO fish_stocks (date, boat_id, fish_type, fish_load_kg) VALUES (?, ?, ?, ?)";
+                    String sql = "INSERT INTO fish_stocks (date, boat_id, fish_type, fish_load_kg, updated_at, updated_by) VALUES (?, ?, ?, ?,CURRENT_TIMESTAMP,?)";
                     PreparedStatement ps = con.prepareStatement(sql);
                     ps.setString(1, date);
                     ps.setInt(2, boatId);
                     ps.setString(3, fishType);
                     ps.setDouble(4, fishLoad);
+                     ps.setString(5, adminName);
+                   
                     ps.executeUpdate();
                     AnimatedMessage.showMessage(this, "Fish stock added.", "Success", AnimatedMessage.Type.SUCCESS);
                     added = true;

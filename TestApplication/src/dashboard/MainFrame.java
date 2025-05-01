@@ -36,7 +36,7 @@ public class MainFrame extends JFrame {
                     contentPanel.add(new BoatDetailsPanel(admin), BorderLayout.CENTER);
                     break;
                 case "stock":
-                    contentPanel.add(new StockManagementPanel(), BorderLayout.CENTER);
+                    contentPanel.add(new StockManagementPanel(admin.lastName), BorderLayout.CENTER);
                     break;
                 case "stats":
                     contentPanel.add(new StatsPanel(), BorderLayout.CENTER); // StatsPanel now uses XChart
