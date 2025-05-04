@@ -13,13 +13,6 @@ import fishernet.utils.DBConnection;
  */
 public class main1 {
     public static void main(String[] args) {
-        // added to just check the database connection
-        try {
-            java.sql.Connection conn = DBConnection.getConnection();
-            System.out.println("✅ Connected successfully");
-            conn.close();
-        } catch (Exception e) {
-            System.out.println("❌ Connection failed: " + e.getMessage());
-        }
+        
     }
 }
