@@ -13,7 +13,7 @@ public class BoatStatsPanel extends JPanel {
 
     // Card colors
     private static final Color CARD_BG = new Color(44, 52, 67);
-    private static final Color CARD_TITLE = new Color(140, 180, 255);
+    private static final Color CARD_TITLE = new Color(255, 255, 255);
     private static final Color CARD_NUMBER = new Color(33, 99, 186);
 
     public BoatStatsPanel() {
@@ -29,8 +29,8 @@ public class BoatStatsPanel extends JPanel {
         int totalBoats = getInt("SELECT COUNT(*) FROM boats");
         int onSail = getInt("SELECT COUNT(*) FROM boats WHERE status='sail'");
         int onPort = getInt("SELECT COUNT(*) FROM boats WHERE status='port'");
-        int gpsEnabled = getInt("SELECT COUNT(*) FROM boats WHERE gps_status=1");
-        int gpsDisabled = getInt("SELECT COUNT(*) FROM boats WHERE gps_status=0");
+        int gpsEnabled = getInt("SELECT COUNT(*) FROM boats WHERE gps_status='GPS enabled'");
+        int gpsDisabled = getInt("SELECT COUNT(*) FROM boats WHERE gps_status='GPS not enabled'");
 
         // First row: one card
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2; gbc.weightx = 1; gbc.weighty = 0.33;
@@ -46,7 +46,7 @@ public class BoatStatsPanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 2;
         add(createStatCard("GPS Enabled", String.valueOf(gpsEnabled)), gbc);
         gbc.gridx = 1;
-        add(createStatCard("GPS Disabled", String.valueOf(gpsDisabled)), gbc);
+        add(createStatCard("GPS Not Enabled", String.valueOf(gpsDisabled)), gbc);
     }
 
     // Helper to create a stat card panel (no icons)

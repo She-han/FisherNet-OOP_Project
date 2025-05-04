@@ -6,7 +6,7 @@ import java.awt.*;
 public class ContentPanel extends JPanel {
     private JPanel mainPanel; // For swapping content
 
-        private Admin admin;
+    private Admin admin;
 
     public ContentPanel(Admin admin) {
         setLayout(new BorderLayout());
@@ -23,22 +23,32 @@ public class ContentPanel extends JPanel {
 
         // Add Boat Card with click handler to swap panel
         CardPanel addBoatCard = new CardPanel("Add Boat", "➕", "Register a new boat");
-   addBoatCard.addMouseListener(new java.awt.event.MouseAdapter() {
-    public void mouseClicked(java.awt.event.MouseEvent evt) {
-        // Create the popup dialog
-        JFrame parent = (JFrame) SwingUtilities.getWindowAncestor(ContentPanel.this);
-        JDialog dialog = new JDialog(parent, "Register New Boat", true); // true = modal
-        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        dialog.setContentPane(new AddBoatPanel(admin.lastName));
-        dialog.pack();
-        dialog.setLocationRelativeTo(parent); // Center on parent
-        dialog.setVisible(true);
-    }
-});
+        addBoatCard.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                // Create the popup dialog
+                JFrame parent = (JFrame) SwingUtilities.getWindowAncestor(ContentPanel.this);
+                JDialog dialog = new JDialog(parent, "Register New Boat", true); // true = modal
+                dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                dialog.setContentPane(new AddBoatPanel(admin.lastName));
+                dialog.pack();
+                dialog.setLocationRelativeTo(parent); // Center on parent
+                dialog.setVisible(true);
+            }
+        });
 
         // Other cards (still as placeholders)
         CardPanel scanQRCard = new CardPanel("Scan QR", "📷", "Scan and update stock");
+        
         CardPanel liveTrackCard = new CardPanel("Live Track", "📍", "Live boat locations");
+        liveTrackCard.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                // Open TraccarWebUISwing in a new window
+                SwingUtilities.invokeLater(() -> {
+                 //   TraccarWebUISwing.openInNewWindow();
+                });
+            }
+        });
 
         topPanel.add(addBoatCard);
         topPanel.add(scanQRCard);

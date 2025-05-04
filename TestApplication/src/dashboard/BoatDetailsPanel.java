@@ -13,9 +13,10 @@ public class BoatDetailsPanel extends JPanel {
     private JPanel listPanel;
     private JTextField searchField;
     private JButton addBoatBtn;
-   private Admin admin;
+    private Admin admin;
 
     public BoatDetailsPanel(Admin admin) {
+        this.admin = admin;
         setLayout(new BorderLayout());
         setBackground(new Color(30, 36, 48));
         setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
@@ -74,7 +75,7 @@ public class BoatDetailsPanel extends JPanel {
                 addBoatBtn.setBackground(new Color(70, 120, 220));
             }
         });
-        addBoatBtn.addActionListener(e -> showAddBoatDialog());
+        addBoatBtn.addActionListener(e -> showAddBoatDialog(admin));
 
         searchPanel.add(searchField);
         searchPanel.add(searchBtn);
@@ -98,7 +99,7 @@ public class BoatDetailsPanel extends JPanel {
         loadBoats();
     }
 
-    private void showAddBoatDialog() {
+    private void showAddBoatDialog(Admin admin) {
         AddBoatPanel addBoatPanel = new AddBoatPanel(admin.lastName);
         int result = JOptionPane.showConfirmDialog(
                 this,
@@ -119,7 +120,7 @@ public class BoatDetailsPanel extends JPanel {
         ArrayList<BoatRowPanel> boatRows = new ArrayList<>();
         String search = searchField != null ? searchField.getText().trim() : "";
         try (Connection con = DBHelper.getConnection()) {
-            StringBuilder sql = new StringBuilder("SELECT id, name, contact_no, status, registration_number, owner_name FROM boats");
+            StringBuilder sql = new StringBuilder("SELECT id, name, contact_no, status, registration_number, owner_name, gps_status FROM boats");
             if (!search.isEmpty()) {
                 sql.append(" WHERE id LIKE ? OR LOWER(name) LIKE ?");
             }
@@ -139,7 +140,8 @@ public class BoatDetailsPanel extends JPanel {
                 String regNo = rs.getString("registration_number");
                 String owner = rs.getString("owner_name");
                 boolean onSail = "sail".equalsIgnoreCase(rs.getString("status"));
-                BoatRowPanel panel = new BoatRowPanel(boatId, name, contact, onSail, regNo, owner);
+                String gpsStatus = rs.getString("gps_status");
+                BoatRowPanel panel = new BoatRowPanel(boatId, name, contact, onSail, regNo, owner, gpsStatus);
                 boatRows.add(panel);
                 listPanel.add(panel);
                 listPanel.add(Box.createVerticalStrut(5));
@@ -225,19 +227,18 @@ public class BoatDetailsPanel extends JPanel {
     // --- Boat Row Panel ---
     class BoatRowPanel extends JPanel {
         int boatId;
-        String regNo, ownerName;
+        String regNo, ownerName, gpsStatus;
         JLabel nameLabel, idLabel, contactLabel;
         SwitchButton statusSwitch;
         JButton editBtn, deleteBtn;
         Color normalBg = new Color(40, 50, 68);
         Color hoverBg = new Color(44, 63, 104);
-        Color normalBorder = new Color(40, 50, 68);
-        Color hoverBorder = new Color(33,99,186);
 
-        public BoatRowPanel(int boatId, String name, String contact, boolean onSail, String regNo, String ownerName) {
+        public BoatRowPanel(int boatId, String name, String contact, boolean onSail, String regNo, String ownerName, String gpsStatus) {
             this.boatId = boatId;
             this.regNo = regNo;
             this.ownerName = ownerName;
+            this.gpsStatus = gpsStatus;
 
             setBackground(normalBg);
             
@@ -259,7 +260,6 @@ public class BoatDetailsPanel extends JPanel {
             idLabel.setForeground(new Color(33,99,186));
         
             idNamePanel.add(idLabel);
-           
 
             nameLabel = new JLabel(name);
             nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
@@ -283,7 +283,17 @@ public class BoatDetailsPanel extends JPanel {
             statusSwitch = new SwitchButton(onSail);
             statusSwitch.addActionListener(evt -> updateStatus());
             centerPanel.add(statusSwitch);
+            if ("GPS enabled".equalsIgnoreCase(gpsStatus)) {
+    // You can use any icon you have, here is an example with a FontAwesome or Material icon if available,
+    // or use an included image resource.
+    JLabel gpsIcon = new JLabel();
+    // If you have a resource, e.g. /icons/gps_on.png
+    gpsIcon.setIcon(new ImageIcon(getClass().getResource("/icons/gps_on.png")));
+    gpsIcon.setToolTipText("GPS Enabled");
+    centerPanel.add(gpsIcon);
+}
             add(centerPanel, BorderLayout.CENTER);
+            
 
             // Right: edit/delete
             JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 7, 22));
@@ -301,12 +311,10 @@ public class BoatDetailsPanel extends JPanel {
             // Hover effect
             addMouseListener(new MouseAdapter() {
                 public void mouseEntered(MouseEvent e) {
-                    
                     setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 0));
                     setBackground(hoverBg);
                 }
                 public void mouseExited(MouseEvent e) {
-                    
                     setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 0));
                     setBackground(normalBg);
                 }
@@ -360,7 +368,7 @@ public class BoatDetailsPanel extends JPanel {
         }
 
         private void showEditDialog() {
-            BoatEditDialog dialog = new BoatEditDialog(boatId, nameLabel.getText(), regNo, ownerName, contactLabel.getText(), statusSwitch.isSelected());
+            BoatEditDialog dialog = new BoatEditDialog(boatId, nameLabel.getText(), regNo, ownerName, contactLabel.getText(), statusSwitch.isSelected(), gpsStatus);
             dialog.setLocationRelativeTo(this);
             dialog.setVisible(true);
             if (dialog.isUpdated()) {
@@ -373,7 +381,7 @@ public class BoatDetailsPanel extends JPanel {
     static class BoatEditDialog extends JDialog {
         private boolean updated = false;
 
-        public BoatEditDialog(int boatId, String name, String regNo, String owner, String contact, boolean onSail) {
+        public BoatEditDialog(int boatId, String name, String regNo, String owner, String contact, boolean onSail, String gpsStatus) {
             super((Frame) null, "Edit Boat Details", true);
             setLayout(new BorderLayout());
             setBackground(new Color(40, 50, 68));
@@ -403,6 +411,20 @@ public class BoatDetailsPanel extends JPanel {
             c.gridx = 0; c.gridy = 4; form.add(styledLabel("Status:"), c);
             c.gridx = 1; SwitchButton statusSwitch = new SwitchButton(onSail); form.add(statusSwitch, c);
 
+            // GPS Status dropdown (combo box)
+            c.gridx = 0; c.gridy = 5; form.add(styledLabel("GPS Status:"), c);
+            c.gridx = 1;
+            JComboBox<String> gpsCombo = new JComboBox<>(new String[] {"GPS enabled", "GPS not enabled"});
+            gpsCombo.setSelectedItem(
+                (gpsStatus != null && gpsStatus.equalsIgnoreCase("GPS enabled"))
+                    ? "GPS enabled"
+                    : "GPS not enabled"
+            );
+            gpsCombo.setBackground(new Color(44, 44, 52));
+            gpsCombo.setForeground(new Color(33,99,186));
+            gpsCombo.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            form.add(gpsCombo, c);
+
             // Buttons
             JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 0));
             btnPanel.setOpaque(false);
@@ -425,6 +447,7 @@ public class BoatDetailsPanel extends JPanel {
                 String newOwner = ownerField.getText().trim();
                 String newContact = contactField.getText().trim();
                 String newStatus = statusSwitch.isSelected() ? "sail" : "port";
+                String newGpsStatus = (String) gpsCombo.getSelectedItem();
 
                 if (newName.isEmpty() || newRegNo.isEmpty() || newOwner.isEmpty() || newContact.isEmpty()) {
                     AnimatedMessage.showMessage(this, "Fill all fields!", "Warning", AnimatedMessage.Type.WARNING);
@@ -432,14 +455,15 @@ public class BoatDetailsPanel extends JPanel {
                 }
 
                 try (Connection con = DBHelper.getConnection()) {
-                    String sql = "UPDATE boats SET name=?, registration_number=?, owner_name=?, contact_no=?, status=? WHERE id=?";
+                    String sql = "UPDATE boats SET name=?, registration_number=?, owner_name=?, contact_no=?, status=?, gps_status=? WHERE id=?";
                     PreparedStatement ps = con.prepareStatement(sql);
                     ps.setString(1, newName);
                     ps.setString(2, newRegNo);
                     ps.setString(3, newOwner);
                     ps.setString(4, newContact);
                     ps.setString(5, newStatus);
-                    ps.setInt(6, boatId);
+                    ps.setString(6, newGpsStatus);
+                    ps.setInt(7, boatId);
                     ps.executeUpdate();
                     AnimatedMessage.showMessage(this, "Boat details updated.", "Success", AnimatedMessage.Type.SUCCESS);
                     updated = true;
