@@ -44,6 +44,9 @@ public class MainFrame extends JFrame {
                 case "reports":
                     contentPanel.add(new ReportsPanel(), BorderLayout.CENTER); // StatsPanel now uses XChart
                 break;
+                case "admins":
+                    contentPanel.add(new AdminDetailsPanel(), BorderLayout.CENTER); // StatsPanel now uses XChart
+                break;
                 case "logout":
                     // Dispose MainFrame and show HomePageFrame for login/signup
                     SwingUtilities.invokeLater(() -> {

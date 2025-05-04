@@ -1,5 +1,5 @@
 
-package dashboard;
+/*package dashboard;
 
 import java.awt.BorderLayout;
 import javax.swing.JFrame;
@@ -34,4 +34,4 @@ public class TraccarWebUISwing {
         frame.add(browser.getUIComponent(), BorderLayout.CENTER);
         frame.setVisible(true);
     }
-}
+}*/
