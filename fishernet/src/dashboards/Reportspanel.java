@@ -4,17 +4,70 @@
  */
 package dashboards;
 
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+
 /**
  *
  * @author ASUS
  */
-public class Reportspanel extends javax.swing.JPanel {
+public class Reportspanel extends JFrame{
 
     /**
      * Creates new form Reportspanel
      */
     public Reportspanel() {
-        initComponents();
+        //initComponents();
+        setTitle("FisherNet - Version 1.0");
+        setSize(1000, 600);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        
+        // Sidebar Panel
+        JPanel sidebar = new JPanel();
+        sidebar.setLayout(new GridLayout(8,1));
+        sidebar.setPreferredSize(new Dimension(200, 0));
+        sidebar.setBackground(new Color(20, 30, 50));
+        String[] menuItems = {"Dashboard", "Boats", "Stock", "Stats", "Reports", "Locations", "Admins", "Logout"};
+        for (String item : menuItems) {
+            JButton btn = new JButton(item);
+            btn.setForeground(Color.WHITE);
+            btn.setBackground(new Color(20, 30, 50));
+            btn.setFocusPainted(false);
+            sidebar.add(btn);
+        }
+        
+        // Top Controls
+        JPanel topPanel = new JPanel();
+        
+        String[] reportTypes = {"New Boats Added Report", "New Stocks Updates Report"};
+        topPanel.add(new JComboBox<>(reportTypes));
+        
+        
+        topPanel.add(new JLabel("From:"));
+        topPanel.add(new JTextField("April 4, 2025", 10));
+        topPanel.add(new JLabel("To:"));
+        topPanel.add(new JTextField("May 4, 2025", 10));
+
+        topPanel.add(new JButton("Generate"));
+        
+         // Table
+        String[] columns = {"Boat ID", "Name", "Registration No", "Capacity", "GPS Status", "Added Date", "Added By"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        JTable table = new JTable(model);
+        JScrollPane tableScroll = new JScrollPane(table);
+
+        // Main Panel
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.add(topPanel, BorderLayout.NORTH);
+        mainPanel.add(tableScroll, BorderLayout.CENTER);
+
+        // Layout Manager
+        getContentPane().add(sidebar, BorderLayout.WEST);
+        getContentPane().add(mainPanel, BorderLayout.CENTER);
+        
+        setVisible(true);
     }
 
     /**
@@ -38,6 +91,9 @@ public class Reportspanel extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(Reportspanel::new);
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
