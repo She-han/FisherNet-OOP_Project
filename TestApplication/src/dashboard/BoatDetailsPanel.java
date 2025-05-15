@@ -26,7 +26,7 @@ public class BoatDetailsPanel extends JPanel {
         topPanel.setOpaque(false);
         JLabel title = new JLabel("Boat Details");
         title.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        title.setForeground(new Color(33,99,186));
+        title.setForeground(new Color(255,255,255));
         title.setBorder(new EmptyBorder(22, 0, 22, 0));
         topPanel.add(title, BorderLayout.WEST);
 

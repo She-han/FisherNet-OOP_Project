@@ -10,44 +10,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-// PlaceholderTextField and PlaceholderPasswordField classes
-/*class PlaceholderTextField extends JTextField {
-    private String placeholder;
-    public PlaceholderTextField(String placeholder) {
-        this.placeholder = placeholder;
-    }
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if(getText().isEmpty() && !isFocusOwner()) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setFont(getFont().deriveFont(Font.ITALIC));
-            g2.setColor(new Color(200, 200, 200, 180));
-            Insets insets = getInsets();
-            g2.drawString(placeholder, insets.left + 6, getHeight() / 2 + getFont().getSize() / 2 - 2);
-            g2.dispose();
-        }
-    }
-}
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
-class PlaceholderPasswordField extends JPasswordField {
-    private String placeholder;
-    public PlaceholderPasswordField(String placeholder) {
-        this.placeholder = placeholder;
-    }
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if(getPassword().length == 0 && !isFocusOwner()) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setFont(getFont().deriveFont(Font.ITALIC));
-            g2.setColor(new Color(200, 200, 200, 180));
-            Insets insets = getInsets();
-            g2.drawString(placeholder, insets.left + 6, getHeight() / 2 + getFont().getSize() / 2 - 2);
-            g2.dispose();
-        }
-    }
-}*/
+
 
 // ---- Main Frame ----
 public class HomePageFrame extends JFrame {
@@ -56,7 +24,7 @@ public class HomePageFrame extends JFrame {
     private FisherNetLogoPanel logoPanel;
 
     public HomePageFrame() {
-        setTitle("FisherNet - Boat Management System");
+        setTitle("FisherNet - Version 1.0");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -69,7 +37,7 @@ public class HomePageFrame extends JFrame {
 
         // Left: Logo and theme
         logoPanel = new FisherNetLogoPanel();
-        logoPanel.setPreferredSize(new Dimension(520, 0));
+        logoPanel.setPreferredSize(new Dimension(900, 0));
         mainPanel.add(logoPanel, BorderLayout.WEST);
 
         // Right: CardLayout for switching between login/signup
@@ -87,8 +55,17 @@ public class HomePageFrame extends JFrame {
 
     // Custom logo and theme panel (edit as needed for your branding)
     static class FisherNetLogoPanel extends JPanel {
+        private BufferedImage logoImage;
+
         public FisherNetLogoPanel() {
-            setBackground(new Color(24,32,44));
+            setBackground(new Color(24, 32, 44));
+            try {
+                // Replace "path/to/logo.png" with the actual path to your logo image
+                logoImage = ImageIO.read(getClass().getResourceAsStream("/icons/logofully.png"));
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("Failed to load logo image.");
+            }
         }
         @Override
         protected void paintComponent(Graphics g) {
@@ -98,29 +75,24 @@ public class HomePageFrame extends JFrame {
             int w = getWidth(), h = getHeight();
             g2d.setPaint(new GradientPaint(0, 0, new Color(33,99,186), w, h, new Color(24,32,44)));
             g2d.fillRect(0, 0, w, h);
+            
+            if (logoImage != null) {
+                int logoWidth = 625;
+                int logoHeight = 443;
+                int logoX = 30;// Center horizontally
+                int logoY = h / 2 - 200; // Position above the text
+                g2d.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight, this);
+            }
 
-            // Draw stylized logo (replace with image if you have)
+         /*   // Draw stylized logo (replace with image if you have)
             g2d.setFont(new Font("Segoe UI Black", Font.BOLD, 54));
             g2d.setColor(Color.WHITE);
-            g2d.drawString("FisherNet", 70, h/2 - 20);
+            g2d.drawString("FisherNet", 70, h/2 - 20);*/
 
-            g2d.setFont(new Font("Segoe UI", Font.BOLD, 26));
+         /*   g2d.setFont(new Font("Segoe UI", Font.BOLD, 26));
             g2d.setColor(new Color(180,220,255));
-            g2d.drawString("Smart Boat Management System", 70, h/2 + 28);
+            g2d.drawString("Smart Boat Management System", 230, h/2 - 30);*/
 
-            // Boat icon (optional, stylized)
-            int[] x = {100, 130, 160};
-            int[] y = {h/2+50, h/2+80, h/2+50};
-            g2d.setColor(new Color(94,148,255));
-            g2d.fillPolygon(x, y, 3);
-            g2d.setColor(new Color(24,32,44)); // mast
-            g2d.fillRect(129, h/2+30, 4, 25);
-
-            // Waves
-            g2d.setStroke(new BasicStroke(3f));
-            g2d.setColor(new Color(33,99,186, 90));
-            g2d.drawArc(70, h/2+80, 100, 25, 0, -180);
-            g2d.drawArc(120, h/2+95, 60, 12, 0, -180);
         }
     }
 
@@ -244,7 +216,7 @@ public class HomePageFrame extends JFrame {
                     SwingUtilities.getWindowAncestor(this).dispose();
                     new MainFrame(admin);
                 } else {
-                    AnimatedMessage.showMessage(this, "Login failed", "Error", AnimatedMessage.Type.ERROR);
+                    AnimatedMessage.showMessage(this, "Login failed! Incorrect username or password ", "Error", AnimatedMessage.Type.ERROR);
                 }
             } catch (Exception ex) {
                 AnimatedMessage.showMessage(this, "Login error: " + ex.getMessage(), "Error", AnimatedMessage.Type.ERROR);
@@ -423,12 +395,5 @@ public class HomePageFrame extends JFrame {
     }
 
     // --- Main entry point ---
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatDarkLaf());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        SwingUtilities.invokeLater(HomePageFrame::new);
-    }
+
 }

@@ -49,7 +49,7 @@ public class ReportsPanel extends JPanel {
 
         JLabel title = new JLabel("Reports");
         title.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        title.setForeground(new Color(33, 99, 186));
+        title.setForeground(new Color(255,255,255));
         title.setBorder(new EmptyBorder(0, 0, 16, 0));
         topPanel.add(title, BorderLayout.WEST);
 

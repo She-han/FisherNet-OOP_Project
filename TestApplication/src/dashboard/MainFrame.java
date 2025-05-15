@@ -3,8 +3,7 @@ package dashboard;
 import javax.swing.*;
 import java.awt.*;
 import com.formdev.flatlaf.FlatDarkLaf;
-// Remove FlatLafExtras import
-// import com.formdev.flatlaf.extras.FlatLafExtras;
+import org.cef.CefApp; // Make sure to import this
 
 public class MainFrame extends JFrame {
     private Admin admin;
@@ -39,21 +38,26 @@ public class MainFrame extends JFrame {
                     contentPanel.add(new StockManagementPanel(admin.lastName), BorderLayout.CENTER);
                     break;
                 case "stats":
-                    contentPanel.add(new StatsPanel(), BorderLayout.CENTER); // StatsPanel now uses XChart
+                    contentPanel.add(new StatsPanel(), BorderLayout.CENTER);
                     break;
                 case "reports":
-                    contentPanel.add(new ReportsPanel(), BorderLayout.CENTER); // StatsPanel now uses XChart
-                break;
+                    contentPanel.add(new ReportsPanel(), BorderLayout.CENTER);
+                    break;
+                case "locations":
+                    // Open TraccarWebUISwing in a new window, nothing embedded here
+                    contentPanel.add(new ContentPanel(admin), BorderLayout.CENTER);
+                    TraccarWebBrowser.openTraccarWebUI();
+                    
+                    break;
                 case "admins":
-                    contentPanel.add(new AdminDetailsPanel(), BorderLayout.CENTER); // StatsPanel now uses XChart
-                break;
+                    contentPanel.add(new AdminDetailsPanel(), BorderLayout.CENTER);
+                    break;
                 case "logout":
-                    // Dispose MainFrame and show HomePageFrame for login/signup
                     SwingUtilities.invokeLater(() -> {
                         dispose();
                         new HomePageFrame();
                     });
-                    return; // Don't update contentPanel after logout
+                    return;
                 default:
                     contentPanel.add(new ContentPanel(admin), BorderLayout.CENTER);
             }
@@ -64,17 +68,7 @@ public class MainFrame extends JFrame {
         setVisible(true);
     }
 
-    // Overload for legacy
     public MainFrame() {
         this(null);
-    }
-
-    public static void main(String[] args) {
-        // Set FlatLaf look and feel
-        FlatDarkLaf.setup();
-        // No FlatLafExtras.installJFreeChartTheme(); needed for XChart
-
-        // NOW start Swing app
-        SwingUtilities.invokeLater(() -> new MainFrame());
     }
 }

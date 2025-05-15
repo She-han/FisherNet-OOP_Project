@@ -3,16 +3,21 @@ package dashboard;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import javax.imageio.ImageIO;
 
 public class SidebarPanel extends JPanel {
     private NavigationListener navListener;
     private final Color baseColor = new Color(20, 20, 48);
     private final Color hoverColor = new Color(33, 99, 186);
     private final JLabel dateTimeLabel;
+    private final Admin admin;
 
     public SidebarPanel(Admin admin) {
+        this.admin = admin;
         setBackground(baseColor);
         setPreferredSize(new Dimension(200, 0));
         setLayout(new BorderLayout());
@@ -23,41 +28,25 @@ public class SidebarPanel extends JPanel {
         mainBox.setLayout(new BoxLayout(mainBox, BoxLayout.Y_AXIS));
 
         // FisherNet logo at the top
-        JPanel logoPanel = new JPanel();
-        logoPanel.setBackground(baseColor);
-        logoPanel.setLayout(new BoxLayout(logoPanel, BoxLayout.Y_AXIS));
+        LogoPanel logoPanel = new LogoPanel();
+        logoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         logoPanel.setBorder(BorderFactory.createEmptyBorder(24, 0, 8, 0));
-
-        JLabel logoLabel = new JLabel("FisherNet", SwingConstants.CENTER);
-        logoLabel.setFont(new Font("Segoe UI Black", Font.BOLD, 26));
-        logoLabel.setForeground(new Color(33,99,186));
-        logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        logoPanel.add(logoLabel);
-
-        // Optionally, add a small subtitle or icon
-        JLabel subtitle = new JLabel("Smart Boat Management");
-        subtitle.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-        subtitle.setForeground(new Color(120,170,255));
-        subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-        logoPanel.add(subtitle);
-
         mainBox.add(logoPanel);
 
         // Admin display
         JPanel adminPanel = new JPanel();
-        adminPanel.setBackground(baseColor);
+        adminPanel.setBackground(new Color(30,30,72));
         adminPanel.setLayout(new BoxLayout(adminPanel, BoxLayout.X_AXIS));
         adminPanel.setBorder(BorderFactory.createEmptyBorder(18, 16, 18, 0));
 
         JLabel icon = new JLabel("\uD83D\uDC64"); // 👤 emoji
-        icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 26));
+        icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24));
         icon.setForeground(new Color(33,99,186));
         adminPanel.add(icon);
         adminPanel.add(Box.createHorizontalStrut(10));
         String name = (admin != null && admin.lastName != null) ? admin.lastName : "Admin";
-        JLabel nameLabel = new JLabel("Hi! " + name);
-        nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        JLabel nameLabel = new JLabel("Hi ! " + name);
+        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 17));
         nameLabel.setForeground(Color.WHITE);
         adminPanel.add(nameLabel);
         adminPanel.add(Box.createHorizontalGlue());
@@ -130,5 +119,36 @@ public class SidebarPanel extends JPanel {
 
     public interface NavigationListener {
         void onNavigate(String viewName);
+    }
+
+    // Inner class to paint logo image
+    private class LogoPanel extends JPanel {
+        private BufferedImage logoImage;
+
+        public LogoPanel() {
+            setBackground(new Color(20, 20, 48));
+            try {
+                logoImage = ImageIO.read(getClass().getResourceAsStream("/icons/logofull.png"));
+            } catch (IOException | IllegalArgumentException e) {
+                e.printStackTrace();
+                System.out.println("Failed to load logo image.");
+            }
+            setPreferredSize(new Dimension(180, 120));
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (logoImage != null) {
+                int w = getWidth();
+                int h = getHeight();
+                // Scale image to fit nicely
+                int logoWidth = Math.min(140, logoImage.getWidth());
+                int logoHeight = (int) ((double) logoImage.getHeight() / logoImage.getWidth() * logoWidth);
+                int logoX = (w - logoWidth) / 2;
+                int logoY = (h - logoHeight) / 2;
+                g.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight, this);
+            }
+        }
     }
 }

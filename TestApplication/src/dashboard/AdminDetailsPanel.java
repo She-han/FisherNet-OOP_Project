@@ -24,7 +24,7 @@ public class AdminDetailsPanel extends JPanel {
         // === Title at the top ===
         JLabel title = new JLabel("Admin Details");
         title.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        title.setForeground(new Color(33,99,186));
+        title.setForeground(new Color(255,255,255));
         title.setBorder(BorderFactory.createEmptyBorder(0,0,18,0));
         title.setHorizontalAlignment(SwingConstants.LEFT);
 
