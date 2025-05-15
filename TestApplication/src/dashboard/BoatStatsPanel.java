@@ -4,23 +4,29 @@ import db.DBHelper;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+/**
+ * Panel that displays statistics about boats with rounded cards.
+ */
 public class BoatStatsPanel extends JPanel {
 
     // Card colors
-    private static final Color CARD_BG = new Color(44, 52, 67);
+    private static final Color CARD_BG = new Color(50,50,72);
     private static final Color CARD_TITLE = new Color(255, 255, 255);
     private static final Color CARD_NUMBER = new Color(33, 99, 186);
 
     public BoatStatsPanel() {
         setLayout(new GridBagLayout());
         setBackground(new Color(27, 34, 44));
-     //   setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-         setBorder(BorderFactory.createTitledBorder("Boats Details"));
+        setBorder(BorderFactory.createTitledBorder("Boats Details"));
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(18, 18, 18, 18);
         gbc.fill = GridBagConstraints.BOTH;
@@ -49,16 +55,17 @@ public class BoatStatsPanel extends JPanel {
         add(createStatCard("GPS Not Enabled", String.valueOf(gpsDisabled)), gbc);
     }
 
-    // Helper to create a stat card panel (no icons)
+    /**
+     * Helper to create a stat card panel with rounded corners.
+     */
     private JPanel createStatCard(String label, String value) {
-        JPanel card = new JPanel();
+        JPanel card = new RoundedPanel(24, CARD_BG); // 24px arc radius
+
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(CARD_BG);
-        card.setBorder(new EmptyBorder(18, 24, 18, 24));
         card.setPreferredSize(new Dimension(220, 120));
         card.setMaximumSize(new Dimension(220, 120));
         card.setMinimumSize(new Dimension(180, 80));
-        card.setOpaque(true);
+        card.setOpaque(false);
 
         // Title
         JLabel titleLabel = new JLabel(label);
@@ -79,16 +86,18 @@ public class BoatStatsPanel extends JPanel {
         card.add(spacer);
         card.add(valueLabel);
 
-        // Optional shadow effect
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 8, 0, new Color(27, 34, 44, 40)),
+        // Compound border for shadow+padding
+        card.setBorder(new CompoundBorder(
+                new LineBorder(new Color(33, 99, 186, 60), 0, false), // subtle colored border
                 new EmptyBorder(18, 24, 18, 24)
         ));
 
         return card;
     }
 
-    // Helper to safely get single int value from DB
+    /**
+     * Helper to safely get single int value from DB.
+     */
     private int getInt(String sql) {
         try (Connection con = DBHelper.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
@@ -98,5 +107,29 @@ public class BoatStatsPanel extends JPanel {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    /**
+     * RoundedPanel - custom JPanel with rounded corners and background color.
+     */
+    private static class RoundedPanel extends JPanel {
+        private final int arc;
+        private final Color bg;
+
+        public RoundedPanel(int arc, Color bg) {
+            this.arc = arc;
+            this.bg = bg;
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(bg);
+            g2.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, arc, arc);
+            super.paintComponent(g2);
+            g2.dispose();
+        }
     }
 }

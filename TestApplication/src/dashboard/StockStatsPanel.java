@@ -63,7 +63,7 @@ public class StockStatsPanel extends JPanel {
                 new Color(241, 91, 181),   // Pink
                 new Color(255, 99, 71),    // Coral
                 new Color(255, 195, 0),    // Yellow
-                new Color(128, 128, 128)   // Gray (fallback)
+                new Color(130, 180, 255)   // Gray (fallback)
         };
         for (int i = 0; i < dataset.getColumnCount(); i++) {
             renderer.setSeriesPaint(0, barColors[i % barColors.length]);
