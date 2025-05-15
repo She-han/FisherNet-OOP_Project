@@ -39,6 +39,7 @@ public class StatsPanel extends JPanel {
     public StatsPanel() {
         setLayout(new BorderLayout());
         setBackground(new Color(27, 34, 44));
+        
 
         // Header
         JLabel topic = new JLabel("Fishery Stock Statistics");
@@ -113,6 +114,7 @@ public class StatsPanel extends JPanel {
         // --- Make charts visible immediately ---
         revalidate();
         repaint();
+        refreshAllCharts();
 
         // Update charts on filter
         updateBtn.addActionListener((ActionEvent e) -> {

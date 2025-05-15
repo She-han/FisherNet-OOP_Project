@@ -36,8 +36,32 @@ public class ContentPanel extends JPanel {
             }
         });
 
-        // Other cards (still as placeholders)
         CardPanel scanQRCard = new CardPanel("Scan QR", "📷", "Scan and update stock");
+        scanQRCard.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                // Open QRScannerFrame first, then AddStockDialog after scanning
+                SwingUtilities.invokeLater(() -> {
+                    QRScannerFrame scanner = new QRScannerFrame(qrText -> {
+                        // When scanned, open AddStockDialog with scanned boat id
+                        AddStockDialog dialog = new AddStockDialog(admin.lastName);
+                        try {
+                            int scannedBoatId = Integer.parseInt(qrText.trim());
+                            dialog.selectOrAddBoatId(scannedBoatId);
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(null, 
+                                "Invalid QR content: " + qrText, 
+                                "QR Error", 
+                                JOptionPane.ERROR_MESSAGE);
+                        }
+                        dialog.setVisible(true);
+                    });
+                    scanner.setVisible(true);
+                });
+            }
+        });
+
+
         
         CardPanel liveTrackCard = new CardPanel("Live Track", "📍", "Live boat locations");
         liveTrackCard.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -45,7 +69,7 @@ public class ContentPanel extends JPanel {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 // Open TraccarWebUISwing in a new window
                 SwingUtilities.invokeLater(() -> {
-                 //   TraccarWebUISwing.openInNewWindow();
+                    TraccarWebBrowser.openTraccarWebUI();
                 });
             }
         });
