@@ -9,6 +9,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
 import java.util.ArrayList;
+import javax.swing.border.EmptyBorder;
 
 public class AdminDetailsPanel extends JPanel {
     private JTextField searchField;
@@ -25,7 +26,8 @@ public class AdminDetailsPanel extends JPanel {
         JLabel title = new JLabel("Admin Details");
         title.setFont(new Font("Segoe UI", Font.BOLD, 28));
         title.setForeground(new Color(255,255,255));
-        title.setBorder(BorderFactory.createEmptyBorder(0,0,18,0));
+       // title.setBorder(BorderFactory.createEmptyBorder(0,0,18,0));
+         title.setBorder(new EmptyBorder(22, 0, 22, 0));
         title.setHorizontalAlignment(SwingConstants.LEFT);
 
         JPanel titlePanel = new JPanel(new BorderLayout());

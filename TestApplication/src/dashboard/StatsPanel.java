@@ -43,7 +43,7 @@ public class StatsPanel extends JPanel {
 
         // Header
         JLabel topic = new JLabel("Fishery Stock Statistics");
-        topic.setFont(new Font("Segoe UI Semibold", Font.BOLD, 32));
+         topic.setFont(new Font("Segoe UI", Font.BOLD, 28));
         topic.setForeground(Color.WHITE);
         topic.setBorder(new EmptyBorder(20, 30, 10, 0));
 

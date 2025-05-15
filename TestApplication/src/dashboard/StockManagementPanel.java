@@ -42,10 +42,10 @@ public class StockManagementPanel extends JPanel {
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setOpaque(false);
 
-        JLabel title = new JLabel("Fish Stock Management");
+        JLabel title = new JLabel("Fish Stocks Details");
         title.setFont(new Font("Segoe UI", Font.BOLD, 28));
         title.setForeground(Color.WHITE);
-        title.setBorder(new EmptyBorder(0, 0, 20, 0));
+         title.setBorder(new EmptyBorder(22, 0, 22, 0));
         topPanel.add(title, BorderLayout.WEST);
 
         // Add Stock Button
@@ -225,7 +225,7 @@ public class StockManagementPanel extends JPanel {
             JPanel centerPanel = new JPanel();
             centerPanel.setOpaque(false);
             centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
-            JLabel fishTypeLabel = new JLabel("Fish Type" + fishType + "  ");
+            JLabel fishTypeLabel = new JLabel("Fish Type : " + fishType + "  ");
             fishTypeLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
             fishTypeLabel.setForeground(new Color(140, 180, 255));
             JLabel fishLoadLabel = new JLabel("Load: " + fishLoad + " Kg");
