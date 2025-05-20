@@ -31,7 +31,12 @@ public class SidebarPanel extends JPanel {
         LogoPanel logoPanel = new LogoPanel();
         logoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         logoPanel.setBorder(BorderFactory.createEmptyBorder(24, 0, 8, 0));
+                            JLabel nam = new JLabel("management");
+        nam.setFont(new Font("Segoe UI", Font.PLAIN, 17));
+        nam.setForeground(Color.WHITE);
+        logoPanel.add(nam);
         mainBox.add(logoPanel);
+
 
         // Admin display
         JPanel adminPanel = new JPanel();
@@ -134,6 +139,8 @@ public class SidebarPanel extends JPanel {
                 System.out.println("Failed to load logo image.");
             }
             setPreferredSize(new Dimension(180, 120));
+
+            
         }
 
         @Override
