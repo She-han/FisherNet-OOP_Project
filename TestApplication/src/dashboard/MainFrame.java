@@ -8,6 +8,8 @@ import org.cef.CefApp; // Make sure to import this
 public class MainFrame extends JFrame {
     private Admin admin;
     private JPanel contentPanel;
+    private Timer sessionTimer;
+    private static final int TIMEOUT = 5 * 60 * 1000;
 
     public MainFrame(Admin admin) {
         this.admin = admin;
@@ -66,8 +68,28 @@ public class MainFrame extends JFrame {
         });
 
         setVisible(true);
+        setupSessionTimeout();
     }
 
+    
+    private void setupSessionTimeout() {
+        sessionTimer = new Timer(TIMEOUT, e -> logout());
+        sessionTimer.setRepeats(false);
+
+        // Listeners to reset timer on activity:
+        Toolkit.getDefaultToolkit().addAWTEventListener(event -> sessionTimer.restart(),
+            AWTEvent.KEY_EVENT_MASK | AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_MOTION_EVENT_MASK);
+
+        sessionTimer.start();
+    }
+    
+    private void logout() {
+        JOptionPane.showMessageDialog(this, "Session timed out. Please log in again.");
+        // Return to login screen or close app
+        // Example:
+        this.dispose();
+        new HomePageFrame().setVisible(true);
+    }
     public MainFrame() {
         this(null);
     }
