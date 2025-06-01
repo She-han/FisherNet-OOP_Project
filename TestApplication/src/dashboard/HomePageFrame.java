@@ -11,11 +11,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-
-
+import org.mindrot.jbcrypt.BCrypt;
 
 // ---- Main Frame ----
 public class HomePageFrame extends JFrame {
@@ -29,7 +27,6 @@ public class HomePageFrame extends JFrame {
         setLayout(new BorderLayout());
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setResizable(true);
-        // Do NOT call setSize if using setExtendedState for maximized
         setLocationRelativeTo(null);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
@@ -79,20 +76,10 @@ public class HomePageFrame extends JFrame {
             if (logoImage != null) {
                 int logoWidth = 625;
                 int logoHeight = 443;
-                int logoX = 30;// Center horizontally
-                int logoY = h / 2 - 200; // Position above the text
+                int logoX = 30;
+                int logoY = h / 2 - 200;
                 g2d.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight, this);
             }
-
-         /*   // Draw stylized logo (replace with image if you have)
-            g2d.setFont(new Font("Segoe UI Black", Font.BOLD, 54));
-            g2d.setColor(Color.WHITE);
-            g2d.drawString("FisherNet", 70, h/2 - 20);*/
-
-         /*   g2d.setFont(new Font("Segoe UI", Font.BOLD, 26));
-            g2d.setColor(new Color(180,220,255));
-            g2d.drawString("Smart Boat Management System", 230, h/2 - 30);*/
-
         }
     }
 
@@ -191,6 +178,7 @@ public class HomePageFrame extends JFrame {
             return btn;
         }
 
+        // --- SECURE LOGIN USING HASHED PASSWORD ---
         private void doLogin() {
             String uname = usernameField.getText().trim();
             String pwd = new String(passwordField.getPassword());
@@ -199,24 +187,29 @@ public class HomePageFrame extends JFrame {
                 return;
             }
             try (Connection con = DBHelper.getConnection()) {
-                String sql = "SELECT first_name, last_name, username, email FROM admins WHERE username=? AND password=?";
+                // Only fetch by username, then compare hash in Java!
+                String sql = "SELECT first_name, last_name, username, email, password FROM admins WHERE username=?";
                 PreparedStatement ps = con.prepareStatement(sql);
                 ps.setString(1, uname);
-                ps.setString(2, pwd);
                 ResultSet rs = ps.executeQuery();
                 if (rs.next()) {
-                    AnimatedMessage.showMessage(this, "Login success", "Success", AnimatedMessage.Type.SUCCESS);
-                    Admin admin = new Admin(
-                            rs.getString("first_name"),
-                            rs.getString("last_name"),
-                            rs.getString("username"),
-                            rs.getString("email"),
-                            pwd
-                    );
-                    SwingUtilities.getWindowAncestor(this).dispose();
-                    new MainFrame(admin);
+                    String hashedPwd = rs.getString("password");
+                    if (BCrypt.checkpw(pwd, hashedPwd)) {
+                        AnimatedMessage.showMessage(this, "Login success", "Success", AnimatedMessage.Type.SUCCESS);
+                        Admin admin = new Admin(
+                                rs.getString("first_name"),
+                                rs.getString("last_name"),
+                                rs.getString("username"),
+                                rs.getString("email"),
+                                hashedPwd // Do not store plain password
+                        );
+                        SwingUtilities.getWindowAncestor(this).dispose();
+                        new MainFrame(admin);
+                    } else {
+                        AnimatedMessage.showMessage(this, "Login failed! Incorrect username or password", "Error", AnimatedMessage.Type.ERROR);
+                    }
                 } else {
-                    AnimatedMessage.showMessage(this, "Login failed! Incorrect username or password ", "Error", AnimatedMessage.Type.ERROR);
+                    AnimatedMessage.showMessage(this, "Login failed! Incorrect username or password", "Error", AnimatedMessage.Type.ERROR);
                 }
             } catch (Exception ex) {
                 AnimatedMessage.showMessage(this, "Login error: " + ex.getMessage(), "Error", AnimatedMessage.Type.ERROR);
@@ -315,6 +308,7 @@ public class HomePageFrame extends JFrame {
             add(form, gbc);
         }
 
+        // --- SECURE SIGNUP: HASH PASSWORD BEFORE STORING ---
         private void doSignUp() {
             String fname = firstNameField.getText().trim();
             String lname = lastNameField.getText().trim();
@@ -336,12 +330,14 @@ public class HomePageFrame extends JFrame {
                     return;
                 }
 
+                // Hash the password before storing
+                String hashed = BCrypt.hashpw(pwd, BCrypt.gensalt());
                 String sql = "INSERT INTO admins (first_name, last_name, username, password, email) VALUES (?, ?, ?, ?, ?)";
                 PreparedStatement ps = con.prepareStatement(sql);
                 ps.setString(1, fname);
                 ps.setString(2, lname);
                 ps.setString(3, uname);
-                ps.setString(4, pwd);
+                ps.setString(4, hashed);
                 ps.setString(5, mail);
                 ps.executeUpdate();
 
@@ -395,5 +391,4 @@ public class HomePageFrame extends JFrame {
     }
 
     // --- Main entry point ---
-
 }
