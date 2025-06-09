@@ -47,8 +47,8 @@ public class SidebarPanel extends JPanel {
         adminPanel.add(icon);
         adminPanel.add(Box.createHorizontalStrut(10));
         String name = (admin != null && admin.lastName != null) ? admin.lastName : "Admin";
-        JLabel nameLabel = new JLabel("Welcome ! " + name);
-        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 17));
+        JLabel nameLabel = new JLabel("Welcome! " + name);
+        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         nameLabel.setForeground(Color.WHITE);
         adminPanel.add(nameLabel);
         adminPanel.add(Box.createHorizontalGlue());
@@ -61,6 +61,7 @@ public class SidebarPanel extends JPanel {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setFocusPainted(false);
             btn.setForeground(Color.WHITE);
+            btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             btn.setBackground(baseColor);
             btn.setMaximumSize(new Dimension(180, 40));
             btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
@@ -71,7 +72,7 @@ public class SidebarPanel extends JPanel {
             btn.addMouseListener(new MouseAdapter() {
                 public void mouseEntered(MouseEvent evt) {
                     btn.setBackground(hoverColor);
-                    btn.setForeground(Color.BLUE);
+                    btn.setForeground(Color.WHITE);
                 }
                 public void mouseExited(MouseEvent evt) {
                     btn.setBackground(baseColor);
